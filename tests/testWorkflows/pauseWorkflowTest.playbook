@@ -55,12 +55,14 @@
             "branches": [
                 {
                     "destination_id": "8e4ab14a-2503-496d-a32c-1310c08c8995",
+                    "destination_type": "action",
                     "priority": 999,
                     "source_id": "34364801-f9a9-4bd9-8ce6-26d361174481",
                     "status": "Success"
                 },
                 {
                     "destination_id": "be506d7d-cf8d-4e17-8bdc-06ade4005dbb",
+                    "destination_type": "action",
                     "priority": 999,
                     "source_id": "8e4ab14a-2503-496d-a32c-1310c08c8995",
                     "status": "Success"

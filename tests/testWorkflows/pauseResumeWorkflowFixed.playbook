@@ -32,6 +32,7 @@
                         ]
                     },
                     "destination_id": "d12e7aad-9ce0-44ca-a18b-ca84f3578c19",
+                    "destination_type": "action",
                     "priority": 1,
                     "source_id": "d12e7aad-9ce0-44ca-a18b-ca84f3578c19",
                     "status": "Success"

@@ -68,7 +68,7 @@
                             "value": 3.0
                         }
                     ],
-                   "device_id": {
+                    "device_id": {
                         "name": "__device__",
                         "value": 1
                     },
@@ -79,11 +79,13 @@
             "branches": [
                 {
                     "destination_id": "6bd6ad07-bc96-418a-8841-76552cbc5caf",
+                    "destination_type": "action",
                     "source_id": "b714d23b-6cd0-4de2-9361-67cae24c8e6b",
                     "status": "Success"
                 },
                 {
                     "destination_id": "b714d23b-6cd0-4de2-9361-67cae24c8e6b",
+                    "destination_type": "action",
                     "source_id": "837e5874-5251-4a33-a927-239c55699423",
                     "status": "Success"
                 }

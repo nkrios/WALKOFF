@@ -1,0 +1,94 @@
+{
+    "id": "4306dd05-1a8a-45d7-836b-c5cf797877fb",
+    "name": "TestChildWorkflow",
+    "workflows": [
+        {
+            "actions": [
+                {
+                    "action_name": "return plus one",
+                    "app_name": "HelloWorld",
+                    "arguments": [
+                        {
+                            "name": "number",
+                            "value": 3
+                        }
+                    ],
+                    "id": "a814e55f-973b-e402-9fe0-291dd673e635",
+                    "name": "return plus one",
+                    "position": {
+                        "x": 290.0,
+                        "y": 190.0
+                    }
+                }
+            ],
+            "id": "e30a4c0b-a403-4f16-a41c-416dca9cd6fb",
+            "is_valid": true,
+            "name": "ChildWorkflow",
+            "start": "a814e55f-973b-e402-9fe0-291dd673e635"
+        },
+        {
+            "actions": [
+                {
+                    "action_name": "hello world",
+                    "app_name": "HelloWorld",
+                    "id": "df7d5639-e513-d8e4-1df7-442f66b31dbc",
+                    "name": "hello world",
+                    "position": {
+                        "x": 110.0,
+                        "y": 90.0
+                    }
+                },
+                {
+                    "action_name": "return plus one",
+                    "app_name": "HelloWorld",
+                    "arguments": [
+                        {
+                            "name": "number",
+                            "reference": "b66a8f4c-e4d3-4ce9-9a78-734454741695"
+                        }
+                    ],
+                    "id": "6944ef16-462d-183f-ee61-38e8ae98667a",
+                    "name": "return plus one",
+                    "position": {
+                        "x": 390.0,
+                        "y": 270.0
+                    }
+                }
+            ],
+            "branches": [
+                {
+                    "destination_id": "b66a8f4c-e4d3-4ce9-9a78-734454741695",
+                    "destination_type": "workflow",
+                    "id": "34d3fc2e-82bc-3bb2-f722-25f8cedf4ace",
+                    "priority": 1,
+                    "source_id": "df7d5639-e513-d8e4-1df7-442f66b31dbc",
+                    "status": "Success"
+                },
+                {
+                    "destination_id": "6944ef16-462d-183f-ee61-38e8ae98667a",
+                    "destination_type": "action",
+                    "id": "6077625f-f379-b660-7c0c-03590b523bf3",
+                    "priority": 1,
+                    "source_id": "b66a8f4c-e4d3-4ce9-9a78-734454741695",
+                    "status": "Success"
+                }
+            ],
+            "child_workflows": [
+                {
+                    "child_workflow_id": "e30a4c0b-a403-4f16-a41c-416dca9cd6fb",
+                    "arguments": [
+                        {
+                            "name": "number",
+                            "value": 5.0
+                        }
+                    ],
+                    "id": "b66a8f4c-e4d3-4ce9-9a78-734454741695"
+                }
+            ],
+            "id": "a33af11f-4c6c-44ba-8ec4-583191817ce5",
+            "is_valid": true,
+            "name": "ParentWorkflow",
+            "start": "df7d5639-e513-d8e4-1df7-442f66b31dbc"
+        }
+    ]
+}

@@ -5,13 +5,14 @@ from marshmallow_sqlalchemy import ModelSchema, field_for
 from walkoff.executiondb import ExecutionDatabase
 from .action import Action
 from .argument import Argument
-from .branch import Branch
+from .branch import Branch, valid_destination_types
 from .condition import Condition
 from .conditionalexpression import ConditionalExpression, valid_operators
 from .executionelement import ExecutionElement
 from .playbook import Playbook
 from .position import Position
 from .transform import Transform
+from .childworkflows import ChildWorkflow
 from .workflow import Workflow
 
 
@@ -42,9 +43,14 @@ class ExecutionBaseSchema(ModelSchema):
         }
 
     def load(self, data, session=None, instance=None, *args, **kwargs):
+        print(data)
         session = ExecutionDatabase.instance.session
         # Maybe automatically find and use instance if 'id' (or key) is passed
         return super(ExecutionBaseSchema, self).load(data, session=session, instance=instance, *args, **kwargs)
+
+    @post_load
+    def do_pos_load(self, data):
+        print(data)
 
 
 class ExecutionElementBaseSchema(ExecutionBaseSchema):
@@ -73,6 +79,8 @@ class ArgumentSchema(ExecutionElementBaseSchema):
 
     @post_load
     def make_instance(self, data):
+        print('making arg')
+        print(data)
         instance = self.instance or self.get_instance(data)
         if instance is not None:
             value = data.pop('value', None)
@@ -134,6 +142,12 @@ class BranchSchema(ExecutionElementBaseSchema):
     """
     source_id = field_for(Branch, 'source_id', required=True)
     destination_id = field_for(Branch, 'destination_id', required=True)
+    destination_type = field_for(
+        Branch,
+        'destination_type',
+        default='action',
+        validates=OneOf(*valid_destination_types),
+        missing='action')
     condition = fields.Nested(ConditionalExpressionSchema())
     priority = field_for(Branch, 'priority', default=999)
     status = field_for(Branch, 'status', default='Success')
@@ -164,6 +178,14 @@ class ActionSchema(ActionableSchema):
         model = Action
 
 
+class ChildWorkflowSchema(ExecutionElementBaseSchema):
+    arguments = fields.Nested(ArgumentSchema, many=True)
+    position = fields.Nested(PositionSchema())
+
+    class Meta:
+        model = ChildWorkflow
+
+
 class WorkflowSchema(ExecutionElementBaseSchema):
     """Schema for workflows
     """
@@ -191,6 +213,7 @@ class PlaybookSchema(ExecutionElementBaseSchema):
 _schema_lookup = {
     Playbook: PlaybookSchema,
     Workflow: WorkflowSchema,
+    ChildWorkflow: ChildWorkflowSchema,
     Action: ActionSchema,
     Branch: BranchSchema,
     ConditionalExpression: ConditionalExpressionSchema,

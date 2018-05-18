@@ -51,75 +51,78 @@ class TestSimpleWorkflow(unittest.TestCase):
         self.executor.wait_and_reset(1)
         self.assertListEqual(events, expected_events)
 
-    def test_simple_workflow_execution(self):
-        expected_events = [
-            WalkoffEvent.WorkflowExecutionStart,
-            WalkoffEvent.AppInstanceCreated,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.WorkflowShutdown]
+    # def test_simple_workflow_execution(self):
+    #     expected_events = [
+    #         WalkoffEvent.WorkflowExecutionStart,
+    #         WalkoffEvent.AppInstanceCreated,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.WorkflowShutdown]
+    #
+    #     self.assert_execution_event_log('basicWorkflowTest', 'helloWorldWorkflow', expected_events)
+    #
+    # def test_multi_action_workflow(self):
+    #     expected_events = [
+    #         WalkoffEvent.WorkflowExecutionStart,
+    #         WalkoffEvent.AppInstanceCreated,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.WorkflowShutdown]
+    #
+    #     self.assert_execution_event_log('multiactionWorkflowTest', 'multiactionWorkflow', expected_events)
+    #
+    # def test_error_workflow(self):
+    #     expected_events = [
+    #         WalkoffEvent.WorkflowExecutionStart,
+    #         WalkoffEvent.AppInstanceCreated,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionError,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.WorkflowShutdown]
+    #
+    #     self.assert_execution_event_log('multiactionError', 'multiactionErrorWorkflow', expected_events)
+    #
+    # def test_workflow_with_dataflow(self):
+    #     expected_events = [
+    #         WalkoffEvent.WorkflowExecutionStart,
+    #         WalkoffEvent.AppInstanceCreated,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.WorkflowShutdown
+    #     ]
+    #
+    #     self.assert_execution_event_log('dataflowTest', 'dataflowWorkflow', expected_events)
+    #
+    # def test_workflow_with_dataflow_action_not_executed(self):
+    #     expected_events = [
+    #         WalkoffEvent.WorkflowExecutionStart,
+    #         WalkoffEvent.AppInstanceCreated,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.BranchTaken,
+    #         WalkoffEvent.ActionStarted,
+    #         WalkoffEvent.ActionExecutionSuccess,
+    #         WalkoffEvent.WorkflowShutdown
+    #     ]
+    #
+    #     self.assert_execution_event_log('dataflowTest', 'dataflowWorkflow', expected_events)
 
-        self.assert_execution_event_log('basicWorkflowTest', 'helloWorldWorkflow', expected_events)
-
-    def test_multi_action_workflow(self):
-        expected_events = [
-            WalkoffEvent.WorkflowExecutionStart,
-            WalkoffEvent.AppInstanceCreated,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.WorkflowShutdown]
-
-        self.assert_execution_event_log('multiactionWorkflowTest', 'multiactionWorkflow', expected_events)
-
-    def test_error_workflow(self):
-        expected_events = [
-            WalkoffEvent.WorkflowExecutionStart,
-            WalkoffEvent.AppInstanceCreated,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionError,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.WorkflowShutdown]
-
-        self.assert_execution_event_log('multiactionError', 'multiactionErrorWorkflow', expected_events)
-
-    def test_workflow_with_dataflow(self):
-        expected_events = [
-            WalkoffEvent.WorkflowExecutionStart,
-            WalkoffEvent.AppInstanceCreated,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.WorkflowShutdown
-        ]
-
-        self.assert_execution_event_log('dataflowTest', 'dataflowWorkflow', expected_events)
-
-    def test_workflow_with_dataflow_action_not_executed(self):
-        expected_events = [
-            WalkoffEvent.WorkflowExecutionStart,
-            WalkoffEvent.AppInstanceCreated,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.BranchTaken,
-            WalkoffEvent.ActionStarted,
-            WalkoffEvent.ActionExecutionSuccess,
-            WalkoffEvent.WorkflowShutdown
-        ]
-
-        self.assert_execution_event_log('dataflowTest', 'dataflowWorkflow', expected_events)
+    def test_workflow_with_children(self):
+        self.assert_execution_event_log('TestChildWorkflow', 'ParentWorkflow', [])

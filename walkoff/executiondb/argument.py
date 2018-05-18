@@ -14,6 +14,7 @@ class Argument(Execution_Base, Validatable):
     __tablename__ = 'argument'
     id = Column(Integer, primary_key=True, autoincrement=True)
     action_id = Column(UUIDType(binary=False), ForeignKey('action.id'))
+    child_workflow_id = Column(UUIDType(binary=False), ForeignKey('child_workflow.id'))
     action_device_id = Column(UUIDType(binary=False), ForeignKey('action.id'))
     condition_id = Column(UUIDType(binary=False), ForeignKey('condition.id'))
     transform_id = Column(UUIDType(binary=False), ForeignKey('transform.id'))

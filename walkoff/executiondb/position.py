@@ -12,6 +12,7 @@ class Position(Execution_Base):
     __tablename__ = 'position'
     id = Column(Integer, primary_key=True, autoincrement=True)
     action_id = Column(UUIDType(binary=False), ForeignKey('action.id'))
+    child_workflow_id = Column(UUIDType(binary=False), ForeignKey('child_workflow.id'))
     x = Column(Float, nullable=False)
     y = Column(Float, nullable=False)
 

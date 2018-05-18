@@ -9,6 +9,7 @@ from walkoff.appgateway.appinstancerepo import AppInstanceRepo
 from walkoff.events import WalkoffEvent
 from walkoff.executiondb import Execution_Base
 from walkoff.executiondb.action import Action
+from walkoff.executiondb.childworkflows import ChildWorkflow
 from walkoff.executiondb.executionelement import ExecutionElement
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class Workflow(ExecutionElement, Execution_Base):
     name = Column(String(80), nullable=False)
     actions = relationship('Action', cascade='all, delete-orphan')
     branches = relationship('Branch', cascade='all, delete-orphan')
+    child_workflows = relationship('ChildWorkflow', cascade='all, delete-orphan')
     start = Column(UUIDType(binary=False))
     is_valid = Column(Boolean, default=False)
     children = ('actions', 'branches')
@@ -88,6 +90,17 @@ class Workflow(ExecutionElement, Execution_Base):
         """
         return next((action for action in self.actions if action.id == action_id), None)
 
+    def get_child_workflow_by_id(self, workflow_id):
+        """Gets an Child Workflow by its ID
+
+        Args:
+            workflow_id (UUID): The ID of the Workflow to find
+
+        Returns:
+            (ChildWorkflow): The ChildWorkflow from its ID
+        """
+        return next((workflow for workflow in self.child_workflows if workflow.id == workflow_id), None)
+
     def remove_action(self, action_id):
         """Removes a Action object from the Workflow's list of Actions given the Action ID.
 
@@ -132,12 +145,14 @@ class Workflow(ExecutionElement, Execution_Base):
             if not isinstance(start, UUID):
                 start = UUID(start)
             executor = self.__execute(start, start_arguments, resume)
-            next(executor)
+            workflow_result = next(executor)
+            return workflow_result
         else:
             logger.error('Workflow is invalid, yet executor attempted to execute.')
 
     def __execute(self, start, start_arguments=None, resume=False):
         actions = self.__actions(start=start)
+        last_result = None
         for action in (action_ for action_ in actions if action_ is not None):
             self._executing_action = action
             logger.debug('Executing action {0} of workflow {1}'.format(action, self.name))
@@ -146,37 +161,44 @@ class Workflow(ExecutionElement, Execution_Base):
                 self._is_paused = False
                 WalkoffEvent.CommonWorkflowSignal.send(self, event=WalkoffEvent.WorkflowPaused)
                 logger.debug('Paused workflow {} (id={})'.format(self.name, str(self.id)))
-                yield
+                yield 'Paused'
             if self._abort:
                 self._abort = False
                 WalkoffEvent.CommonWorkflowSignal.send(self, event=WalkoffEvent.WorkflowAborted)
                 logger.info('Aborted workflow {} (id={})'.format(self.name, str(self.id)))
-                yield
+                yield 'Aborted'
 
             device_id = self._instance_repo.setup_app_instance(action, self)
+            action_args = {'arguments': start_arguments, 'resume': resume}
             if device_id:
-                result = action.execute(self._accumulator, instance=self._instance_repo.get_app_instance(device_id)(),
-                                        arguments=start_arguments, resume=resume)
-            else:
-                result = action.execute(self._accumulator, arguments=start_arguments, resume=resume)
+                action_args['instance'] = self._instance_repo.get_app_instance(device_id)()
+            result = action.execute(self._accumulator, **action_args)
 
             if start_arguments:
                 start_arguments = None
 
             if result and result.status == "trigger":
-                yield
+                yield 'Triggered'
+            last_result = action.get_output().result
             self._accumulator[action.id] = action.get_output().result
         self.__shutdown()
-        yield
+        yield last_result
 
     def __actions(self, start):
-        current_id = start
-        current_action = self.get_action_by_id(current_id)
+        next_executable_id = start
+        next_executable = self.get_action_by_id(next_executable_id)
+        if next_executable is None:
+            next_executable = self.get_child_workflow_by_id(next_executable_id)
 
-        while current_action:
-            yield current_action
-            current_id = self.get_branch(current_action, self._accumulator)
-            current_action = self.get_action_by_id(current_id) if current_id is not None else None
+        while next_executable:
+            yield next_executable
+            next_executable_id, next_executable_type = self.get_branch(next_executable, self._accumulator)
+            if next_executable_id is None:
+                next_executable = None
+            elif next_executable_type == 'action':
+                next_executable = self.get_action_by_id(next_executable_id)
+            else:
+                next_executable = self.get_child_workflow_by_id(next_executable_id)
             yield  # needed so that when for-loop calls next() it doesn't advance too far
         yield  # needed so you can avoid catching StopIteration exception
 
@@ -197,14 +219,14 @@ class Workflow(ExecutionElement, Execution_Base):
             for branch in branches:
                 # TODO: This here is the only hold up from getting rid of action._output.
                 # Keep whole result in accumulator
-                destination_id = branch.execute(current_action.get_output(), accumulator)
+                destination_id, destination_type = branch.execute(current_action.get_output(), accumulator)
                 if destination_id is not None:
                     logger.debug('Branch {} with destination {} chosen by workflow {} (id={})'.format(
                         str(branch.id), str(destination_id), self.name, str(self.id)))
-                    return destination_id
-            return None
+                    return destination_id, destination_type
+            return None, None
         else:
-            return None
+            return None, None
 
     def __get_branches_by_action_id(self, id_):
         branches = []

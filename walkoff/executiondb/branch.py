@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import Column, Integer, ForeignKey, String, event, orm
+from sqlalchemy import Column, Integer, ForeignKey, String, event, orm, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import UUIDType
 
@@ -11,23 +11,36 @@ from walkoff.executiondb.executionelement import ExecutionElement
 logger = logging.getLogger(__name__)
 
 
+valid_destination_types = ('action', 'workflow')
+
+
 class Branch(ExecutionElement, Execution_Base):
     __tablename__ = 'branch'
     workflow_id = Column(UUIDType(binary=False), ForeignKey('workflow.id'))
     source_id = Column(UUIDType(binary=False), nullable=False)
     destination_id = Column(UUIDType(binary=False), nullable=False)
+    destination_type = Column(Enum(*valid_destination_types, name='destination_types'), nullable=False)
     status = Column(String(80))
     condition = relationship('ConditionalExpression', cascade='all, delete-orphan', uselist=False)
     priority = Column(Integer)
     children = ('condition',)
 
-    def __init__(self, source_id, destination_id, id=None, status='Success', condition=None, priority=999):
+    def __init__(
+            self,
+            source_id,
+            destination_id,
+            destination_type='action',
+            id=None,
+            status='Success',
+            condition=None,
+            priority=999):
         """Initializes a new Branch object.
         
         Args:
-            source_id (int): The ID of the source action that will be sending inputs to this Branch.
-            destination_id (int): The ID of the destination action that will be returned if the conditions for this
+            source_id (UUID): The ID of the source action that will be sending inputs to this Branch.
+            destination_id (UUID): The ID of the destination action that will be returned if the conditions for this
                 Branch are met.
+            destination_type ("action"|"workflow", optional): The type of destination of this branch. Defaults to "action"
             id (str|UUID, optional): Optional UUID to pass into the Action. Must be UUID object or valid UUID string.
                 Defaults to None.
             status (str, optional): Optional field to keep track of the status of the Branch. Defaults to
@@ -41,6 +54,7 @@ class Branch(ExecutionElement, Execution_Base):
         ExecutionElement.__init__(self, id)
         self.source_id = source_id
         self.destination_id = destination_id
+        self.destination_type = destination_type
         self.status = status
         self.priority = priority
         self.condition = condition
@@ -75,13 +89,13 @@ class Branch(ExecutionElement, Execution_Base):
             if self.condition is None or self.condition.execute(data_in=data_in.result, accumulator=accumulator):
                 WalkoffEvent.CommonWorkflowSignal.send(self, event=WalkoffEvent.BranchTaken)
                 logger.debug('Branch is valid for input {0}'.format(data_in))
-                return self.destination_id
+                return self.destination_id, self.destination_type
             else:
                 logger.debug('Branch is not valid for input {0}'.format(data_in))
                 WalkoffEvent.CommonWorkflowSignal.send(self, event=WalkoffEvent.BranchNotTaken)
-                return None
+                return None, None
         else:
-            return None
+            return None, None
 
 
 @event.listens_for(Branch, 'before_update')

@@ -79,13 +79,13 @@ class TestBranch(unittest.TestCase):
             branch = Branch(source_id=1, destination_id=2, condition=condition)
             if expect_name:
                 expected_name = branch.destination_id
-                self.assertEqual(branch.execute(input_str, {}), expected_name)
+                self.assertTupleEqual(branch.execute(input_str, {}), (expected_name, 'action'))
             else:
-                self.assertIsNone(branch.execute(input_str, {}))
+                self.assertTupleEqual(branch.execute(input_str, {}), (None, None))
 
     def test_get_branch_no_branches(self):
         workflow = Workflow('test', 1)
-        self.assertIsNone(workflow.get_branch(None, {}))
+        self.assertTupleEqual(workflow.get_branch(None, {}), (None, None))
 
     def test_get_branch(self):
         action = Action('HelloWorld', 'helloWorld', 'helloWorld', id=10)
@@ -107,7 +107,7 @@ class TestBranch(unittest.TestCase):
 
         WalkoffEvent.CommonWorkflowSignal.connect(validate_sent_data)
 
-        self.assertEqual(workflow.get_branch(action, {}), 2)
+        self.assertTupleEqual(workflow.get_branch(action, {}), (2, 'action'))
         self.assertTrue(result['triggered'])
 
     def test_branch_with_priority(self):
@@ -125,7 +125,7 @@ class TestBranch(unittest.TestCase):
         action._output = ActionResult(result='aaa', status='Success')
         workflow = Workflow('test', 1, actions=[action, action2, action3], branches=[branch_one, branch_two])
 
-        self.assertEqual(workflow.get_branch(action, {}), 1)
+        self.assertTupleEqual(workflow.get_branch(action, {}), (1, 'action'))
 
     def test_branch_first_action_none(self):
         action = Action('HelloWorld', 'helloWorld', 'helloWorld', id=10)
@@ -145,7 +145,7 @@ class TestBranch(unittest.TestCase):
         action._output = ActionResult(result='aaa', status='Success')
         workflow = Workflow('test', 1, actions=[action, action2, action3], branches=[branch_one, branch_two])
 
-        self.assertEqual(workflow.get_branch(action, {}), 1)
+        self.assertEqual(workflow.get_branch(action, {}), (1, 'action'))
 
     def test_branch_counter(self):
         action = Action('HelloWorld', 'helloWorld', 'helloWorld', id=1)
