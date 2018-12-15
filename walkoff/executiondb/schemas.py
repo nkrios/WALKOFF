@@ -180,6 +180,7 @@ class WorkflowSchema(ExecutionElementBaseSchema):
     """Schema for workflows
     """
     name = field_for(Workflow, 'name', required=True)
+    description = field_for(Workflow, 'description')
     actions = fields.Nested(ActionSchema, many=True)
     branches = fields.Nested(BranchSchema, many=True)
     environment_variables = fields.Nested(EnvironmentVariableSchema, many=True)

@@ -33,6 +33,10 @@ CreateWorkflow:
       description: The name of the workflow.
       type: string
       example: HelloWorldWorkflow
+    description:
+      description: A text description of the workflow
+      type: string
+      example: This workflow returns HelloWorld
     start:
       description: ID of the starting action
       $ref: '#/components/schemas/Uuid'
@@ -67,6 +71,10 @@ Workflow:
       description: The name of the workflow.
       type: string
       example: HelloWorldWorkflow
+    description:
+      description: A text description of the workflow
+      type: string
+      example: This workflow returns HelloWorld
     start:
       description: ID of the starting action
       $ref: '#/components/schemas/Uuid'

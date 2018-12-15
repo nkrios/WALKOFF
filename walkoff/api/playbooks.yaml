@@ -349,7 +349,37 @@
           application/json:
             schema:
               $ref: '#/components/schemas/Error'
-
+/workflows/name/{workflow_name}:
+  parameters:
+    - name: workflow_name
+      in: path
+      description: 'The workflow name to obtain the ID of. '
+      required: true
+      schema:
+        type: string
+  get:
+    tags:
+      - Workflows
+    summary: Retrieve a workflow id by name
+    description: ''
+    operationId: walkoff.server.endpoints.playbooks.workflow_id_by_name
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [uuid]
+              properties:
+                uuid:
+                  $ref: '#/components/schemas/Uuid'
+      404:
+        description: Workflow does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
 /uuid:
   get:
     tags:

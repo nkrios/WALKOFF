@@ -30,21 +30,16 @@ def does_workflow_exist(playbook_id, workflow_id):
         exists().where(and_(Workflow.id == workflow_id, Workflow.playbook_id == playbook_id))).scalar()
 
 
-def playbook_getter(playbook_id=None, playbook_name=None):
-    args = {"id": playbook_id} if playbook_id else {"name": playbook_name}
-    playbook = current_app.running_context.execution_db.session.query(Playbook).filter_by(args).first()
-    return playbook
+def playbook_getter(playbook_id):
+    return current_app.running_context.execution_db.session.query(Playbook).filter_by(id=playbook_id).first()
 
 
-def workflow_getter(workflow_id=None, workflow_name=None):
-    args = {"id": workflow_id} if workflow_id else {"name": workflow_name}
-    return current_app.running_context.execution_db.session.query(Workflow).filter_by(args).first()
+def workflow_getter(workflow_id):
+    return current_app.running_context.execution_db.session.query(Workflow).filter_by(id=workflow_id).first()
 
 
-with_playbook_by_id = with_resource_factory('playbook', playbook_getter, validator=is_valid_uid)
-with_workflow_by_id = with_resource_factory('workflow', workflow_getter, validator=is_valid_uid)
-with_playbook_by_name = with_resource_factory('playbook', playbook_getter)
-with_workflow_by_name = with_resource_factory('workflow', workflow_getter)
+with_playbook = with_resource_factory('playbook', playbook_getter, validator=is_valid_uid)
+with_workflow = with_resource_factory('workflow', workflow_getter, validator=is_valid_uid)
 validate_workflow_is_registered = validate_resource_exists_factory('workflow', does_workflow_exist)
 
 ALLOWED_EXTENSIONS = {'json', 'playbook'}
@@ -135,7 +130,7 @@ def create_playbook(source=None):
 def read_playbook(playbook_id, mode=None):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['read']))
-    @with_playbook_by_id('read', playbook_id)
+    @with_playbook('read', playbook_id)
     def __func(playbook):
         playbook_json = playbook_schema.dump(playbook)
         if mode == "export":
@@ -157,7 +152,7 @@ def update_playbook():
 
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['update']))
-    @with_playbook_by_id('update', playbook_id)
+    @with_playbook('update', playbook_id)
     def __func(playbook):
         if 'name' in data and playbook.name != data['name']:
             playbook.name = data['name']
@@ -179,7 +174,7 @@ def update_playbook():
 def delete_playbook(playbook_id):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['delete']))
-    @with_playbook_by_id('delete', playbook_id)
+    @with_playbook('delete', playbook_id)
     def __func(playbook):
         current_app.running_context.execution_db.session.delete(playbook)
         current_app.running_context.execution_db.session.commit()
@@ -192,7 +187,7 @@ def delete_playbook(playbook_id):
 def copy_playbook(playbook_id):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['create', 'read']))
-    @with_playbook_by_id('copy', playbook_id)
+    @with_playbook('copy', playbook_id)
     def __func(playbook):
         data = request.get_json()
 
@@ -245,7 +240,7 @@ def get_workflows(playbook=None):
 def get_workflows_for_playbook(playbook_id):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['read']))
-    @with_playbook_by_id('read workflows', playbook_id)
+    @with_playbook('read workflows', playbook_id)
     def __func(playbook):
         return [workflow_schema.dump(workflow) for workflow in playbook.workflows], SUCCESS
 
@@ -258,7 +253,7 @@ def create_workflow(source=None):
 
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['create']))
-    @with_playbook_by_id('create workflow', playbook_id)
+    @with_playbook('create workflow', playbook_id)
     def __func(playbook):
         workflow_name = data['name']
         if 'start' not in data:
@@ -289,11 +284,29 @@ def create_workflow(source=None):
 def read_workflow(workflow_id):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['read']))
-    @with_workflow_by_id('read', workflow_id)
+    @with_workflow('read', workflow_id)
     def __func(workflow):
         return workflow_schema.dump(workflow), SUCCESS
 
     return __func()
+
+
+def workflow_id_by_name(workflow_name):
+    @jwt_required
+    @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['read']))
+    def __get():
+        r = current_app.running_context.execution_db.session.query(Workflow).filter_by(name=workflow_name).first()
+        if r:
+            print(type(r), type(r.id))
+            return {"id": r.id}, SUCCESS
+        else:
+            return Problem.from_crud_resource(
+                OBJECT_DNE_ERROR,
+                'workflow',
+                'read',
+                'Could not read workflow {}. No such workflow.'.format(workflow_name))
+
+    return __get()
 
 
 def update_workflow():
@@ -302,7 +315,7 @@ def update_workflow():
 
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['update']))
-    @with_workflow_by_id('update', workflow_id)
+    @with_workflow('update', workflow_id)
     def __func(workflow):
         errors = workflow_schema.load(data, instance=workflow).errors
         if errors:
@@ -328,7 +341,7 @@ def update_workflow():
 def delete_workflow(workflow_id):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['delete']))
-    @with_workflow_by_id('delete', workflow_id)
+    @with_workflow('delete', workflow_id)
     def __func(workflow):
         playbook = current_app.running_context.execution_db.session.query(Playbook).filter_by(
             id=workflow.playbook_id).first()
@@ -351,7 +364,7 @@ def delete_workflow(workflow_id):
 def copy_workflow(playbook_id, workflow_id):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['create', 'read']))
-    @with_workflow_by_id('copy', workflow_id)
+    @with_workflow('copy', workflow_id)
     def __func(workflow):
         data = request.get_json()
 
