@@ -165,6 +165,39 @@
               $ref: '#/components/schemas/Error'
 
 
+/playbooks/name/{playbook_name}:
+  parameters:
+    - name: playbook_name
+      in: path
+      description: 'The playbook name to obtain the ID of. '
+      required: true
+      schema:
+        type: string
+  get:
+    tags:
+      - Playbooks
+    summary: Retrieve a playbook id by name
+    description: ''
+    operationId: walkoff.server.endpoints.playbooks.playbook_id_by_name
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [uuid]
+              properties:
+                uuid:
+                  $ref: '#/components/schemas/Uuid'
+      404:
+        description: Playbook does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+
+
 /playbooks/{playbook_id}/workflows:
   parameters:
     - name: playbook_id

@@ -83,12 +83,25 @@ class TestWorkflowServer(ServerTestCase):
     def test_read_playbook_invalid_id_format(self):
         self.check_invalid_uuid('get', '/api/playbooks/0', 'playbook')
 
+    def test_read_playbook_id_by_name(self):
+        playbook = execution_db_help.standard_load()
+        response = self.get_with_status_check('/api/playbooks/name/{}'.format(playbook.name), headers=self.headers)
+        self.assertEqual(response['id'], str(playbook.id))
+
     def test_read_workflows(self):
         execution_db_help.standard_load()
         workflows = {str(workflow.id) for workflow in
                      self.app.running_context.execution_db.session.query(Workflow).all()}
         response = self.get_with_status_check('/api/workflows', headers=self.headers)
         self.assertSetEqual({workflow['id'] for workflow in response}, workflows)
+
+    def test_read_workflow_id_by_name(self):
+        execution_db_help.standard_load()
+        workflows = {workflow.name: str(workflow.id) for workflow in
+                     self.app.running_context.execution_db.session.query(Workflow).all()}
+        for name, id in workflows.items():
+            response = self.get_with_status_check('/api/workflows/name/{}'.format(name), headers=self.headers)
+            self.assertEqual(response['id'], id)
 
     def test_read_playbook_workflows(self):
         playbook = execution_db_help.standard_load()
@@ -215,7 +228,8 @@ class TestWorkflowServer(ServerTestCase):
         expected_playbooks = self.app.running_context.execution_db.session.query(Playbook).all()
         original_length = len(list(expected_playbooks))
         start = str(uuid4())
-        data = {"name": self.add_playbook_name, 'workflows': [{'name': 'wf1', 'start': start}]}
+        data = {"name": self.add_playbook_name, 'workflows': [{'name': 'wf1',
+                                                               'start': start}]}
         self.update_playbooks = True
         response = self.post_with_status_check('/api/playbooks', headers=self.headers,
                                                status_code=OBJECT_CREATED, data=json.dumps(data),
@@ -223,7 +237,10 @@ class TestWorkflowServer(ServerTestCase):
         response.pop('id')
         response['workflows'][0].pop('id')
         self.assertDictEqual(response, {'name': self.add_playbook_name,
-                                        'workflows': [{'name': 'wf1', 'start': start, 'is_valid': True}]})
+                                        'workflows': [{'name': 'wf1',
+                                                       'start': start,
+                                                       'description': 'No description',
+                                                       'is_valid': True}]})
         self.assertEqual(len(list(self.app.running_context.execution_db.session.query(Playbook).all())),
                          original_length + 1)
 

@@ -93,6 +93,23 @@ def get_playbooks(full=None):
     return __func()
 
 
+def playbook_id_by_name(playbook_name):
+    @jwt_required
+    @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['read']))
+    def __get():
+        r = current_app.running_context.execution_db.session.query(Playbook).filter_by(name=playbook_name).first()
+        if r:
+            return {"id": r.id}, SUCCESS
+        else:
+            return Problem.from_crud_resource(
+                OBJECT_DNE_ERROR,
+                'workflow',
+                'read',
+                'Could not read playbook {}. No such playbook.'.format(playbook_name))
+
+    return __get()
+
+
 def create_playbook(source=None):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('playbooks', ['create']))
@@ -297,7 +314,6 @@ def workflow_id_by_name(workflow_name):
     def __get():
         r = current_app.running_context.execution_db.session.query(Workflow).filter_by(name=workflow_name).first()
         if r:
-            print(type(r), type(r.id))
             return {"id": r.id}, SUCCESS
         else:
             return Problem.from_crud_resource(

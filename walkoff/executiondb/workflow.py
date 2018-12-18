@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 class Workflow(ExecutionElement, Execution_Base):
     __tablename__ = 'workflow'
     playbook_id = Column(UUIDType(binary=False), ForeignKey('playbook.id', ondelete='CASCADE'))
-    name = Column(String(80), nullable=False, unique=True)
-    description = Column(String(255), nullable=False)
+    name = Column(String(80), nullable=False)  # TODO: , unique=True)
+    description = Column(String(255))
     actions = relationship('Action', cascade='all, delete-orphan', passive_deletes=True)
     branches = relationship('Branch', cascade='all, delete-orphan', passive_deletes=True)
     start = Column(UUIDType(binary=False))
