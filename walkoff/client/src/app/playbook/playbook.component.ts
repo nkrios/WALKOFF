@@ -108,6 +108,7 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 	recalculateConsoleTableCallback: any;
 	actionFilter: string = '';
 	actionFilterControl = new FormControl();
+	
 
 	// Simple bootstrap modal params
 	modalParams: {
@@ -212,16 +213,10 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 	getConsoleSSE(workflowExecutionId: string): void {
 		if (this.consoleEventSource) this.consoleEventSource.close();
 
-		this.authService.getAccessTokenRefreshed()
-			.then(authToken => {
-				let url = `api/streams/console/log?access_token=${ authToken }&workflow_execution_id=${ workflowExecutionId }`;
-
-				this.consoleEventSource = new (window as any).EventSource(url);
+		this.authService.getEventSource(`/api/streams/console/log?workflow_execution_id=${ workflowExecutionId }`)
+			.then(eventSource => {
+				this.consoleEventSource = eventSource
                 this.consoleEventSource.addEventListener('log', (e: any) => this.consoleEventHandler(e));
-				this.consoleEventSource.onerror = (err: Error) => {
-					// this.toastrService.error(`Error retrieving workflow results: ${err.message}`);
-					console.error(err);
-				};
 			});
 	}
 
@@ -247,20 +242,13 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 	getActionStatusSSE(workflowExecutionId: string): void {
 		if (this.eventSource) this.eventSource.close();
 
-		this.authService.getAccessTokenRefreshed()
-			.then(authToken => {
-				let url = `api/streams/workflowqueue/actions?access_token=${ authToken }&workflow_execution_id=${ workflowExecutionId }`;
-
-				this.eventSource = new (window as any).EventSource(url);
+		this.authService.getEventSource(`/api/streams/workflowqueue/actions?workflow_execution_id=${ workflowExecutionId }`)
+			.then(eventSource => {
+				this.eventSource = eventSource
 				this.eventSource.addEventListener('started', (e: any) => this.actionStatusEventHandler(e));
 				this.eventSource.addEventListener('success', (e: any) => this.actionStatusEventHandler(e));
 				this.eventSource.addEventListener('failure', (e: any) => this.actionStatusEventHandler(e));
 				this.eventSource.addEventListener('awaiting_data', (e: any) => this.actionStatusEventHandler(e));
-
-				this.eventSource.onerror = (err: Error) => {
-					// this.toastrService.error(`Error retrieving workflow results: ${err.message}`);
-					console.error(err);
-				};
 			});
 	}
 
@@ -384,13 +372,6 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 	setupGraph(): void {
 		// Convert our selection arrays to a string
 		if (!this.loadedWorkflow.actions) { this.loadedWorkflow.actions = []; }
-		this.loadedWorkflow.actions.forEach(action => {
-			action.arguments.forEach(argument => {
-				if (argument.selection && Array.isArray(argument.selection)) {
-					argument.selection = (argument.selection as Array<string | number>).join('.');
-				}
-			});
-		});
 
 		// Create the Cytoscape graph
 		this.cy = cytoscape({
@@ -852,22 +833,6 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 			if (!argument.reference) {
 				delete argument.selection;
 				return;
-			}
-
-			if (argument.selection == null) {
-				argument.selection = [];
-			} else if (typeof (argument.selection) === 'string') {
-				argument.selection = argument.selection.trim();
-				argument.selection = argument.selection.split('.');
-
-				if (argument.selection[0] === '') {
-					argument.selection = [];
-				} else {
-					// For each value, if it's a valid number, convert it to a number.
-					for (let i = 0; i < argument.selection.length; i++) {
-						if (!isNaN(argument.selection[i] as number)) { argument.selection[i] = +argument.selection[i]; }
-					}
-				}
 			}
 		});
 	}
@@ -1680,7 +1645,7 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 			if (element.value) { obj[element.name] = element.value; }
 			if (element.reference) { obj[element.name] = element.reference.toString(); }
 			if (element.selection && element.selection.length) {
-				const selectionString = (element.selection as any[]).join('.');
+				const selectionString = element.selection;
 				obj[element.name] = `${obj[element.name]} (${selectionString})`;
 			}
 		});
