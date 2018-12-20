@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class Worker(object):
-    def __init__(self, id_, config_path):
+    def __init__(self, id_, config_path, should_exit: threading.Event):
         """Initialize a Worker object, which will be managing the execution of Workflows
 
         Args:
@@ -34,8 +34,9 @@ class Worker(object):
         """
         self.id_ = id_
         self._lock = Lock()
-        signal.signal(signal.SIGINT, self.exit_handler)
-        signal.signal(signal.SIGABRT, self.exit_handler)
+
+        # ignore SIGINT and let our parent handle it.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         if walkoff.config.Config.SEPARATE_WORKERS or os.name == 'nt':
             walkoff.config.initialize(config_path=config_path)
@@ -58,7 +59,7 @@ class Worker(object):
 
         self.handle_data_sent = handle_data_sent
 
-        self.thread_exit = False
+        self.should_exit = should_exit
 
         socket_id = u"Worker-{}".format(id_).encode("ascii")
 
@@ -93,23 +94,22 @@ class Worker(object):
 
     def wait_for_ready(self):
         """Waits for the worker to be ready"""
-        while True:
+        while not self.should_exit.is_set():
             if self.workflow_receiver.is_ready() and self.workflow_results_sender.is_ready() and \
                     self.workflow_communication_receiver.is_ready():
                 break
 
         self.workflow_results_sender.send_ready_message()
 
-    def exit_handler(self, signum, frame):
+    def exit_handler(self):
         """Clean up upon receiving a SIGINT or SIGABT"""
-        logger.info('Worker received exit signal {}'.format(signum))
-        self.thread_exit = True
+        logger.info('Shutting down Worker {}.'.format(self.id_))
         self.workflow_receiver.shutdown()
         if self.threadpool:
             self.threadpool.shutdown()
         self.workflow_communication_receiver.shutdown()
         if self.comm_thread:
-            self.comm_thread.join(timeout=2)
+            self.comm_thread.join()
         self.workflow_results_sender.shutdown()
         zmq.Context.instance().destroy()
         os._exit(0)
@@ -117,12 +117,13 @@ class Worker(object):
     def receive_workflows(self):
         """Receives requests to execute workflows, and sends them off to worker threads"""
         workflow_generator = self.workflow_receiver.receive_workflows()
-        while not self.thread_exit:
+        while not self.should_exit.is_set():
             if not self.workflow_executor.is_at_capacity:
                 workflow_data = next(workflow_generator)
                 if workflow_data is not None:
                     self.threadpool.submit(self.workflow_executor.execute, *workflow_data)
             time.sleep(0.1)
+        self.exit_handler()
 
     def receive_communications(self):
         """Constantly receives data from the ZMQ socket and handles it accordingly"""

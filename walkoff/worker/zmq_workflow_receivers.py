@@ -2,6 +2,7 @@ import logging
 from collections import namedtuple
 
 import zmq
+import gevent
 from enum import Enum
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import DecodeError
@@ -74,8 +75,9 @@ class ZmqWorkflowCommunicationReceiver(object):
         """Constantly receives data from the ZMQ socket and handles it accordingly"""
         logger.info('Starting workflow communication receiver')
         while not self._exit:
+            gevent.sleep(.1)
             try:
-                message_bytes = self.comm_sock.recv()
+                message_bytes = self.comm_sock.recv(zmq.NOBLOCK)
             except zmq.ZMQError:
                 continue
 
@@ -91,9 +93,7 @@ class ZmqWorkflowCommunicationReceiver(object):
                     yield WorkerCommunicationMessageData(
                         WorkerCommunicationMessageType.workflow,
                         self._format_workflow_message_data(message.workflow_control_message))
-                elif message_type == CommunicationPacket.EXIT:
-                    logger.info('Worker received exit message')
-                    break
+
         return
 
     @staticmethod
@@ -183,7 +183,6 @@ class WorkflowReceiver(object):
                           env_vars, user
             else:
                 yield None
-        return
 
     def is_ready(self):
         return self._ready

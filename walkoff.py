@@ -121,4 +121,4 @@ if __name__ == "__main__":
     finally:
         app.running_context.executor.shutdown_pool()
         logger.info('Shutting down server')
-        os._exit(exit_code)
+        sys.exit(exit_code)

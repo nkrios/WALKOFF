@@ -1,14 +1,14 @@
 import argparse
 import logging
 import multiprocessing
-import os
-import signal
 import time
 
 import walkoff.config
 from walkoff.worker.worker import Worker
 
 logger = logging.getLogger(__name__)
+should_exit = multiprocessing.Event()
+should_exit.clear()
 
 
 def parse_args():
@@ -30,7 +30,7 @@ def spawn_worker_processes():
     pids = []
     try:
         for i in range(walkoff.config.Config.NUMBER_PROCESSES):
-            pid = multiprocessing.Process(target=Worker, args=(i, walkoff.config.Config.CONFIG_PATH))
+            pid = multiprocessing.Process(target=Worker, args=(i, walkoff.config.Config.CONFIG_PATH, should_exit))
             pid.start()
             pids.append(pid)
         return pids
@@ -39,18 +39,18 @@ def spawn_worker_processes():
 
 
 def shutdown_procs(procs):
+    should_exit.set()
     for proc in procs:
+        proc.join(timeout=3)  # allow the worker some time to exit cleanly before coming after it with fire
         if proc.is_alive():
-            logger.info('Shutting down process {}'.format(proc.pid))
-            os.kill(proc.pid, signal.SIGABRT)
-            proc.join(timeout=3)
-            try:
-                os.kill(proc.pid, signal.SIGKILL)
-            except (OSError, AttributeError):
-                pass
+            logger.info('Sending SIGKILL to process {}.'.format(proc.pid))
+            proc.kill()
+            proc.join()
+            logger.info('Process {} killed.'.format(proc.pid))
 
 
 if __name__ == '__main__':
+    import sys
     args = parse_args()
 
     if args.config:
@@ -66,4 +66,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         shutdown_procs(processes)
     finally:
-        os._exit(0)
+        sys.exit(0)
