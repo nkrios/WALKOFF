@@ -108,8 +108,6 @@ class TestExternallyCachedAccumulator(TestCase):
         retrieved = {self.cache.extract_key(key): value for key, value in self.cache.items()}
         self.assertEqual(len(retrieved), len(entries))
         # entries = {self.cache.format_key(key): value for key, value in entries.items()}
-        # print(set(retrieved))
-        # print(set(list(entries.items())))
         self.assertDictEqual(retrieved, entries)
 
     def test_pop_too_many_args(self):

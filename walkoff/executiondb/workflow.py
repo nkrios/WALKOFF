@@ -16,6 +16,7 @@ class Workflow(ExecutionElement, Execution_Base):
     playbook_id = Column(UUIDType(binary=False), ForeignKey('playbook.id', ondelete='CASCADE'))
     name = Column(String(80), nullable=False)  # TODO: , unique=True)
     description = Column(String(255))
+    tags = relationship('Tag', cascade='all, delete-orphan', passive_deletes=True)
     actions = relationship('Action', cascade='all, delete-orphan', passive_deletes=True)
     branches = relationship('Branch', cascade='all, delete-orphan', passive_deletes=True)
     start = Column(UUIDType(binary=False))
@@ -24,8 +25,8 @@ class Workflow(ExecutionElement, Execution_Base):
     environment_variables = relationship('EnvironmentVariable', cascade='all, delete-orphan', passive_deletes=True)
     __table_args__ = (UniqueConstraint('playbook_id', 'name', name='_playbook_workflow'),)
 
-    def __init__(self, name, start, id=None, actions=None, branches=None, environment_variables=None, description=None,
-                 errors=None):
+    def __init__(self, name, start, id=None, actions=None, branches=None, tags=None, environment_variables=None,
+                 description=None, errors=None):
         """Initializes a Workflow object. A Workflow falls under a Playbook, and has many associated Actions
             within it that get executed.
 
@@ -36,6 +37,7 @@ class Workflow(ExecutionElement, Execution_Base):
                 Defaults to None.
             actions (list[Action]): Optional Action objects. Defaults to None.
             branches (list[Branch], optional): A list of Branch objects for the Workflow object. Defaults to None.
+            tags (list[str], optional): A list of string tags. Defaults to None
             environment_variables (list[EnvironmentVariable], optional): A list of environment variables for the
                 Workflow. Defaults to None.
         """
@@ -43,6 +45,7 @@ class Workflow(ExecutionElement, Execution_Base):
         self.name = name
         self.actions = actions if actions else []
         self.branches = branches if branches else []
+        self.tags = tags if tags else []
         self.environment_variables = environment_variables if environment_variables else []
         self.description = description if description else "No description"
         self.start = start

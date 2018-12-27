@@ -22,6 +22,7 @@ class Action(ExecutionElement, Execution_Base):
     workflow_id = Column(UUIDType(binary=False), ForeignKey('workflow.id', ondelete='CASCADE'))
     app_name = Column(String(80), nullable=False)
     action_name = Column(String(80), nullable=False)
+    comment = Column(String(255))
     name = Column(String(80), nullable=False)
     device_id = relationship('Argument', uselist=False, cascade='all, delete-orphan',
                              foreign_keys=[Argument.action_device_id], passive_deletes=True)
@@ -31,7 +32,7 @@ class Action(ExecutionElement, Execution_Base):
     position = relationship('Position', uselist=False, cascade='all, delete-orphan', passive_deletes=True)
     children = ('arguments', 'trigger')
 
-    def __init__(self, app_name, action_name, name, device_id=None, id=None, arguments=None, trigger=None,
+    def __init__(self, app_name, action_name, name, comment=None, device_id=None, id=None, arguments=None, trigger=None,
                  position=None, errors=None):
         """Initializes a new Action object. A Workflow has one or more actions that it executes.
         Args:
@@ -49,6 +50,7 @@ class Action(ExecutionElement, Execution_Base):
             trigger (ConditionalExpression, optional): A ConditionalExpression which causes an Action to wait until the
                 data is sent fulfilling the condition. Defaults to None.
             position (Position, optional): Position object for the Action. Defaults to None.
+            comment (str, optional): String describing the action in the workflow
         """
         ExecutionElement.__init__(self, id, errors)
 
@@ -58,6 +60,7 @@ class Action(ExecutionElement, Execution_Base):
         self.device_id = device_id
         self.app_name = app_name
         self.action_name = action_name
+        self.comment = comment if comment else ""
 
         self.arguments = []
         if arguments:
