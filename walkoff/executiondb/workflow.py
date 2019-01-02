@@ -1,6 +1,7 @@
 import logging
+import json
 
-from sqlalchemy import Column, String, ForeignKey, UniqueConstraint, Boolean, event
+from sqlalchemy import Column, String, ARRAY, ForeignKey, UniqueConstraint, Boolean, event
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import UUIDType
 
@@ -16,7 +17,7 @@ class Workflow(ExecutionElement, Execution_Base):
     playbook_id = Column(UUIDType(binary=False), ForeignKey('playbook.id', ondelete='CASCADE'))
     name = Column(String(80), nullable=False)  # TODO: , unique=True)
     description = Column(String(255))
-    tags = relationship('Tag', cascade='all, delete-orphan', passive_deletes=True)
+    tags = Column(String(255))
     actions = relationship('Action', cascade='all, delete-orphan', passive_deletes=True)
     branches = relationship('Branch', cascade='all, delete-orphan', passive_deletes=True)
     start = Column(UUIDType(binary=False))
@@ -45,7 +46,7 @@ class Workflow(ExecutionElement, Execution_Base):
         self.name = name
         self.actions = actions if actions else []
         self.branches = branches if branches else []
-        self.tags = tags if tags else []
+        self.tags = json.dumps(tags) if tags else "[]"
         self.environment_variables = environment_variables if environment_variables else []
         self.description = description if description else "No description"
         self.start = start
