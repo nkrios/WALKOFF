@@ -1,7 +1,9 @@
+import quart.flask_patch
+
 import datetime
 from collections import OrderedDict
 
-from flask import request, current_app
+from quart import request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from sqlalchemy import exists, and_, or_
 

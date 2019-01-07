@@ -1,6 +1,8 @@
+import quart.flask_patch
+
 from datetime import timedelta
 
-from flask import current_app, request
+from quart import current_app, request
 from flask_jwt_extended import jwt_required
 
 import walkoff.config

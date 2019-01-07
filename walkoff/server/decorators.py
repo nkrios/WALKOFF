@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from flask import current_app
+from quart import current_app
 
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import OBJECT_DNE_ERROR, BAD_REQUEST

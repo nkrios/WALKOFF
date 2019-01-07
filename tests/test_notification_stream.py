@@ -1,6 +1,6 @@
 import json
 
-from flask import Response
+from quart import Response
 from mock import patch
 
 from tests.util.mock_objects import MockRedisCacheAdapter

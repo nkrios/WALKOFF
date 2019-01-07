@@ -3,7 +3,7 @@ from unittest import TestCase
 from uuid import uuid4
 
 from walkoff.server.app import create_app
-from walkoff.server.endpoints.triggers import get_authorized_execution_ids
+from walkoff.server.blueprints.triggers import get_authorized_execution_ids
 from walkoff.serverdb import db, User, Role
 from walkoff.serverdb.message import Message, MessageHistory
 from tests.util import initialize_test_config

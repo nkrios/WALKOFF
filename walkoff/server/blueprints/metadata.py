@@ -1,6 +1,8 @@
+import quart.flask_patch
+
 import os
 
-from flask import send_file
+from quart import send_file
 from flask_jwt_extended import jwt_required
 
 import walkoff.config

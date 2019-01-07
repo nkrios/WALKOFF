@@ -1,6 +1,6 @@
 import json
 
-from flask import current_app
+from quart import current_app
 
 from walkoff.events import WalkoffEvent
 from walkoff.executiondb import WorkflowStatusEnum, ActionStatusEnum

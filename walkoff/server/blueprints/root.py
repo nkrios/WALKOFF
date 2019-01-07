@@ -4,8 +4,8 @@ import os
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from flask import current_app
-from flask import render_template, send_from_directory, Blueprint
+from quart import current_app
+from quart import render_template, send_from_directory, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
 
 import walkoff.config

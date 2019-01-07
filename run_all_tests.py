@@ -44,7 +44,7 @@ if __name__ == '__main__':
         print('\nInterrupted! Ending full test')
         successful = False
     finally:
-        from flask import current_app
+        from quart import current_app
 
         current_app.running_context.executor.shutdown_pool()
         sys.exit(not successful)

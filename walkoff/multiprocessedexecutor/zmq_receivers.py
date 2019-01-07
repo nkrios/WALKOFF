@@ -2,7 +2,7 @@ import logging
 
 import gevent
 import zmq.green as zmq
-from flask import Flask
+from quart import Quart
 
 import walkoff.config
 from walkoff.events import WalkoffEvent
@@ -17,7 +17,7 @@ class ZmqWorkflowResultsReceiver(object):
         """Initialize a Receiver object, which will receive callbacks from the ExecutionElements.
 
         Args:
-            current_app (Flask.App, optional): The current Flask app. If the Receiver is not started separately,
+            current_app (Quart.App, optional): The current Quart app. If the Receiver is not started separately,
                 then the current_app must be included in the init. Otherwise, it should not be included.
             message_converter (WorkflowResultsConverter): Class to convert workflow results
         """
@@ -35,7 +35,7 @@ class ZmqWorkflowResultsReceiver(object):
         self.results_sock.bind(walkoff.config.Config.ZMQ_RESULTS_ADDRESS)
 
         if current_app is None:
-            self.current_app = Flask(__name__)
+            self.current_app = Quart(__name__)
             self.current_app.config.from_object(walkoff.config.Config)
             self.current_app.running_context = context.Context(init_all=False)
         else:

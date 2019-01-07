@@ -2,7 +2,7 @@ import json
 import threading
 import time
 
-from flask import current_app
+from quart import current_app
 
 from tests.util import execution_db_help
 from tests.util.servertestcase import ServerTestCase

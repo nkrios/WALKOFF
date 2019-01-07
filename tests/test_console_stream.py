@@ -2,7 +2,7 @@ import json
 from copy import copy
 from uuid import uuid4
 
-from flask import Response
+from quart import Response
 from mock import patch
 
 from tests.util.mock_objects import MockRedisCacheAdapter

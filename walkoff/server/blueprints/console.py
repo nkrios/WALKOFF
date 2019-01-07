@@ -1,7 +1,9 @@
+import quart.flask_patch
+
 import logging
 from uuid import UUID
 
-from flask import request
+from quart import request
 from flask_jwt_extended import jwt_required
 
 from walkoff.events import WalkoffEvent

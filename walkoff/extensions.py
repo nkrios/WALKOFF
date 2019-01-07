@@ -1,3 +1,5 @@
+import quart.flask_patch
+
 import flask_sqlalchemy
 from sqlalchemy import MetaData
 from flask_jwt_extended.jwt_manager import JWTManager

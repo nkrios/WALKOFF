@@ -4,7 +4,7 @@ import walkoff.appgateway
 import walkoff.config
 from tests.util.assertwrappers import orderless_list_compare
 from tests.util.servertestcase import ServerTestCase
-from walkoff.server.endpoints.appapi import *
+from walkoff.server.blueprints.appapi import *
 
 
 class TestAppApiServerFuncs(ServerTestCase):

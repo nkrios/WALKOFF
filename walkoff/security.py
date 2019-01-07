@@ -1,3 +1,5 @@
+import quart.flask_patch
+
 import json
 import logging
 from functools import wraps
@@ -13,9 +15,9 @@ from walkoff.serverdb import User
 from walkoff.serverdb.tokens import is_token_revoked
 
 try:
-    from flask import _app_ctx_stack as ctx_stack
+    from quart import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
-    from flask import _request_ctx_stack as ctx_stack
+    from quart import _request_ctx_stack as ctx_stack
 
 logger = logging.getLogger(__name__)
 

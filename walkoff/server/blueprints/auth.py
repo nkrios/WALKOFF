@@ -1,4 +1,6 @@
-from flask import request, current_app
+import quart.flask_patch
+
+from quart import request, current_app
 from flask_jwt_extended import (jwt_refresh_token_required, create_access_token, create_refresh_token, get_jwt_identity,
                                 get_raw_jwt, jwt_required, decode_token)
 
@@ -16,6 +18,7 @@ user_deactivated_problem = Problem(UNAUTHORIZED_ERROR, token_problem_title, 'Use
 def _authenticate_and_grant_tokens(json_in, with_refresh=False):
     username = json_in.get('username', None)
     password = json_in.get('password', None)
+    print("logging in: {}, {}".format(username, password))
     if not (username and password):
         return invalid_username_password_problem
 

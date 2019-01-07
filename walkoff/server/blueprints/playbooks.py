@@ -1,8 +1,10 @@
+import quart.flask_patch
+
 import json
 from io import BytesIO
 from uuid import uuid4
 
-from flask import request, current_app, send_file
+from quart import request, current_app, send_file
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
 from sqlalchemy import exists, and_

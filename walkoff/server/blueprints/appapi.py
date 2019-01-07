@@ -1,3 +1,5 @@
+import quart.flask_patch
+
 from copy import deepcopy
 
 from flask_jwt_extended import jwt_required

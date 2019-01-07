@@ -1,8 +1,10 @@
+import quart.flask_patch
+
 from datetime import datetime
 from uuid import UUID
 
 from enum import Enum, unique
-from flask import current_app, request
+from quart import current_app, request
 from flask_jwt_extended import jwt_required
 
 from walkoff.events import WalkoffEvent

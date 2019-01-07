@@ -1,3 +1,4 @@
+quart
 Flask >= 0.10.0
 Flask_SQLAlchemy >= 2.1
 flask_jwt_extended >= 3.4.0

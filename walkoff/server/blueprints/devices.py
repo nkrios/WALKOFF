@@ -1,6 +1,8 @@
+import quart.flask_patch
+
 import json
 
-from flask import current_app, request, send_file
+from quart import current_app, request, send_file
 from flask_jwt_extended import jwt_required
 
 from walkoff.appgateway.apiutil import get_app_device_api, UnknownApp, UnknownDevice, InvalidArgument

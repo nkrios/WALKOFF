@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 
-from flask import current_app
+from quart import current_app
 
 import walkoff.config
 from tests.util.servertestcase import ServerTestCase

@@ -1,6 +1,8 @@
+import quart.flask_patch
+
 from datetime import datetime
 
-from flask import jsonify
+from quart import jsonify
 from flask_jwt_extended import jwt_required
 
 from interfaces import dispatcher, AppBlueprint

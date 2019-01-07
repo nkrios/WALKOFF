@@ -2,7 +2,7 @@ import datetime
 import json
 from uuid import uuid4, UUID
 
-from flask import current_app
+from quart import current_app
 
 import walkoff.executiondb.schemas
 import walkoff.server.workflowresults

@@ -1,4 +1,4 @@
-from flask import current_app
+from quart import current_app
 from sqlalchemy import and_
 
 from tests.util import execution_db_help

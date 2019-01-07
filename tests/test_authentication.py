@@ -1,3 +1,5 @@
+import quart.flask_patch
+
 import json
 from datetime import timedelta
 

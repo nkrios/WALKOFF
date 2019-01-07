@@ -1,3 +1,5 @@
+import quart.flask_patch
+
 from datetime import datetime
 
 from enum import Enum, unique

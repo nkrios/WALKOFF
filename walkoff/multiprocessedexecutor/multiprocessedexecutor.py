@@ -6,7 +6,7 @@ import gevent
 import nacl.bindings
 import nacl.utils
 import zmq.green as zmq
-from flask import current_app
+from quart import current_app
 from nacl.public import PrivateKey, Box
 
 import walkoff.config
@@ -51,11 +51,11 @@ class MultiprocessedExecutor(object):
             walkoff.config.Config.CLIENT_PRIVATE_KEY[:nacl.bindings.crypto_box_SECRETKEYBYTES]).public_key
         self.__box = Box(key, worker_key)
 
-    def initialize_threading(self, app, pids=None):
+    async def initialize_threading(self, app, pids=None):
         """Initialize the multiprocessing communication threads, allowing for parallel execution of workflows.
 
         Args:
-            app (FlaskApp): The current_app object
+            app (Quart.App): The current_app object
             pids (list[Process], optional): Optional list of spawned processes. Defaults to None
 
         """
@@ -75,7 +75,7 @@ class MultiprocessedExecutor(object):
 
         self.zmq_workflow_comm = make_communication_sender()
 
-        with app.app_context():
+        async with app.app_context():
             data = {'execution_db': current_app.running_context.execution_db}
             self.results_sender = make_results_sender(**data)
 

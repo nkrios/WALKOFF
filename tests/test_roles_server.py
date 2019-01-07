@@ -1,6 +1,6 @@
 import json
 
-from flask import current_app
+from quart import current_app
 
 from tests.util import servertestcase
 from walkoff.extensions import db

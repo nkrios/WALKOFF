@@ -1,4 +1,6 @@
-from flask import current_app
+import quart.flask_patch
+
+from quart import current_app
 from flask_jwt_extended import jwt_required
 
 from walkoff.executiondb.metrics import AppMetric, WorkflowMetric

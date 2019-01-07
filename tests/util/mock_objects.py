@@ -7,7 +7,7 @@ import nacl.bindings
 import nacl.utils
 # from fakeredis import FakeStrictRedis
 from redis import Redis
-from flask import current_app
+from quart import current_app
 from google.protobuf.json_format import MessageToDict
 from nacl.public import Box
 from nacl.public import PrivateKey
