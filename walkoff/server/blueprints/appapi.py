@@ -2,7 +2,11 @@ import quart.flask_patch
 
 from copy import deepcopy
 
+from quart import jsonify, request
+from quart_openapi import Pint, Resource, PintBlueprint
 from flask_jwt_extended import jwt_required
+
+from http import HTTPStatus
 
 import walkoff.config
 from walkoff import helpers
@@ -12,14 +16,17 @@ from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
 
 
-def read_all_apps():
+appapi_bp = PintBlueprint(__name__, 'appapi', base_model_schema='appapi.yaml')
+
+
+@appapi_bp.route('/apps')
+class ReadAllApps(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    def __func():
+    @appapi_bp.response(HTTPStatus.OK, "Success", appapi_bp.create_ref_validator())
+    async def get(self):
         apps = helpers.list_apps(walkoff.config.Config.APPS_PATH)
         return sorted(apps, key=(lambda app_name: app_name.lower())), SUCCESS
-
-    return __func()
 
 
 def extract_schema(api, unformatted_fields=('name', 'example', 'placeholder', 'description', 'required')):
@@ -105,10 +112,12 @@ def format_full_app_api(api, app_name):
     return ret
 
 
-def read_all_app_apis(field_name=None):
+@appapi_bp.route('/apps/apis')
+class ReadAllAppApis(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    def __func():
+    def get(self):
+        field_name = await request.args.get('field_name')
         # TODO: Remove this once connexion can validate enums with openapi3.
         if field_name and field_name not in ['info', 'action_apis', 'condition_apis', 'transform_apis', 'device_apis',
                                              'tags', 'external_docs']:
@@ -122,30 +131,28 @@ def read_all_app_apis(field_name=None):
             ret = [{'name': api['name'], field_name: api.get(field_name, default)} for api in ret]
         return ret, SUCCESS
 
-    return __func()
-
 
 def app_api_dne_problem(app_name):
     return Problem(OBJECT_DNE_ERROR, 'Could not read app api.', 'App {} does not exist.'.format(app_name))
 
 
-def read_app_api(app_name):
+@appapi_bp.route('/apps/apis/<app_name>')
+class ReadAppApi(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    def __func():
+    def get(self, app_name):
         api = walkoff.config.app_apis.get(app_name, None)
         if api is not None:
             return format_full_app_api(api, app_name), SUCCESS
         else:
             return app_api_dne_problem(app_name)
 
-    return __func()
 
-
-def read_app_api_field(app_name, field_name):
+@appapi_bp.route('/apps/apis/<app_name>/<field_name>')
+class ReadAppApiField(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    def __func():
+    def get(self, app_name, field_name):
         # TODO: Remove this once connexion can validate enums with openapi3.
         if field_name not in ['info', 'action_apis', 'condition_apis', 'transform_apis', 'device_apis', 'tags',
                               'externalDocs']:
@@ -156,5 +163,3 @@ def read_app_api_field(app_name, field_name):
             return format_full_app_api(api, app_name)[field_name], SUCCESS
         else:
             return app_api_dne_problem(app_name)
-
-    return __func()

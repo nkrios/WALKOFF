@@ -1,6 +1,8 @@
 import quart.flask_patch
 
-from quart import request, current_app
+from quart import jsonify, request, current_app
+from quart_openapi import Pint, Resource, PintBlueprint
+
 from flask_jwt_extended import (jwt_refresh_token_required, create_access_token, create_refresh_token, get_jwt_identity,
                                 get_raw_jwt, jwt_required, decode_token)
 
@@ -15,10 +17,12 @@ invalid_username_password_problem = Problem(
 user_deactivated_problem = Problem(UNAUTHORIZED_ERROR, token_problem_title, 'User is deactivated.')
 
 
+auth_bp = PintBlueprint(__name__, 'auth')
+
+
 def _authenticate_and_grant_tokens(json_in, with_refresh=False):
     username = json_in.get('username', None)
     password = json_in.get('password', None)
-    print("logging in: {}, {}".format(username, password))
     if not (username and password):
         return invalid_username_password_problem
 
@@ -43,35 +47,40 @@ def _authenticate_and_grant_tokens(json_in, with_refresh=False):
         return invalid_username_password_problem
 
 
-def login():
-    return _authenticate_and_grant_tokens(request.get_json(), with_refresh=True)
+@auth_bp.route('/auth')
+class Login(Resource):
+    async def post(self):
+        return _authenticate_and_grant_tokens(request.get_json(), with_refresh=True)
 
 
 def fresh_login():
     return _authenticate_and_grant_tokens(request.get_json(), with_refresh=False)
 
 
-@jwt_refresh_token_required
-def refresh(body=None, token_info=None, user=None):
-    current_user_id = get_jwt_identity()
-    user = User.query.filter(User.id == current_user_id).first()
-    if user is None:
-        revoke_token(get_raw_jwt())
-        return Problem(
-            UNAUTHORIZED_ERROR,
-            'Could not grant access token.',
-            'User {} from refresh JWT identity could not be found.'.format(current_user_id))
-    if user.active:
-        return {'access_token': create_access_token(identity=current_user_id, fresh=False)}, OBJECT_CREATED
-    else:
-        return user_deactivated_problem
+@auth_bp.route('/auth/refresh')
+class Refresh(Resource):
+    @jwt_refresh_token_required
+    async def post(self, body=None, token_info=None, user=None):
+        current_user_id = get_jwt_identity()
+        user = User.query.filter(User.id == current_user_id).first()
+        if user is None:
+            revoke_token(get_raw_jwt())
+            return Problem(
+                UNAUTHORIZED_ERROR,
+                'Could not grant access token.',
+                'User {} from refresh JWT identity could not be found.'.format(current_user_id))
+        if user.active:
+            return {'access_token': create_access_token(identity=current_user_id, fresh=False)}, OBJECT_CREATED
+        else:
+            return user_deactivated_problem
 
 
-def logout():
+@auth_bp.route('/auth/logout')
+class Logout(Resource):
     from walkoff.serverdb.tokens import revoke_token
 
     @jwt_required
-    def __func():
+    def post(self):
         data = request.get_json()
         refresh_token = data.get('refresh_token', None) if data else None
         if refresh_token is None:
@@ -90,5 +99,3 @@ def logout():
                 BAD_REQUEST,
                 'Could not logout.',
                 'The identity of the refresh token does not match the identity of the authentication token.')
-
-    return __func()
