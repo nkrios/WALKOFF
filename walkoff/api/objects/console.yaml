@@ -1,0 +1,9 @@
+components:
+  parameters:
+    workflow_execution_id:
+      in: query
+      description: Workflow execution id to retrieve log for
+      required: true
+      schema:
+        type: string
+#  responses:

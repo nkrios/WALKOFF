@@ -6,6 +6,10 @@ from quart_openapi import Pint, Resource, PintBlueprint
 from flask_jwt_extended import (jwt_refresh_token_required, create_access_token, create_refresh_token, get_jwt_identity,
                                 get_raw_jwt, jwt_required, decode_token)
 
+from http import HTTPStatus
+
+import walkoff.config
+from walkoff.helpers import load_yaml
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
 from walkoff.serverdb import User, db
@@ -17,7 +21,8 @@ invalid_username_password_problem = Problem(
 user_deactivated_problem = Problem(UNAUTHORIZED_ERROR, token_problem_title, 'User is deactivated.')
 
 
-auth_bp = PintBlueprint(__name__, 'auth')
+auth_bp = PintBlueprint(__name__, 'auth',
+                        base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "auth.yaml"))
 
 
 def _authenticate_and_grant_tokens(json_in, with_refresh=False):
@@ -49,6 +54,9 @@ def _authenticate_and_grant_tokens(json_in, with_refresh=False):
 
 @auth_bp.route('/auth')
 class Login(Resource):
+    @auth_bp.expect(auth_bp.create_ref_validator("Authentication", "schemas"))
+    @auth_bp.response(HTTPStatus.OK, "Success", auth_bp.create_ref_validator("Token", "schemas"))
+    @auth_bp.response(HTTPStatus.UNAUTHORIZED, "Unauthorized", auth_bp.create_ref_validator("Error", "schemas"))
     async def post(self):
         return _authenticate_and_grant_tokens(request.get_json(), with_refresh=True)
 
@@ -60,6 +68,8 @@ def fresh_login():
 @auth_bp.route('/auth/refresh')
 class Refresh(Resource):
     @jwt_refresh_token_required
+    @auth_bp.response(HTTPStatus.OK, "Success", auth_bp.create_ref_validator("Token", "schemas"))
+    @auth_bp.response(HTTPStatus.UNAUTHORIZED, "Unauthorized", auth_bp.create_ref_validator("Error", "schemas"))
     async def post(self, body=None, token_info=None, user=None):
         current_user_id = get_jwt_identity()
         user = User.query.filter(User.id == current_user_id).first()
@@ -80,6 +90,9 @@ class Logout(Resource):
     from walkoff.serverdb.tokens import revoke_token
 
     @jwt_required
+    @auth_bp.expect(auth_bp.create_ref_validator("RevokeToken", "schemas"))
+    @auth_bp.response(HTTPStatus.NO_CONTENT, "Success")
+    @auth_bp.response(HTTPStatus.BAD_REQUEST, "Invalid Refresh Token", auth_bp.create_ref_validator("Error", "schemas"))
     def post(self):
         data = request.get_json()
         refresh_token = data.get('refresh_token', None) if data else None

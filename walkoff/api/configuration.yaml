@@ -38,7 +38,7 @@
           application/json:
             schema:
               $ref: '#/components/schemas/Error'
-      515:
+      500:
         description: Could not write configuration to file
         content:
           application/json:
@@ -65,7 +65,7 @@
           application/json:
             schema:
               $ref: '#/components/schemas/Error'
-      515:
+      500:
         description: Could not write configuration to file
         content:
           application/json:

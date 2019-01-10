@@ -14,16 +14,18 @@ from walkoff.appgateway import is_app_action_bound
 from walkoff.security import permissions_accepted_for_resources, ResourcePermissions
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
+from walkoff.helpers import load_yaml
 
 
-appapi_bp = PintBlueprint(__name__, 'appapi', base_model_schema='appapi.yaml')
+appapi_bp = PintBlueprint(__name__, 'appapi',
+                          base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "appapi.yaml"))
 
 
 @appapi_bp.route('/apps')
 class ReadAllApps(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    @appapi_bp.response(HTTPStatus.OK, "Success", appapi_bp.create_ref_validator())
+    @appapi_bp.response(HTTPStatus.OK, "Success", appapi_bp.create_ref_validator("ReadAllApps", "responses"))
     async def get(self):
         apps = helpers.list_apps(walkoff.config.Config.APPS_PATH)
         return sorted(apps, key=(lambda app_name: app_name.lower())), SUCCESS
@@ -116,9 +118,11 @@ def format_full_app_api(api, app_name):
 class ReadAllAppApis(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
+    @appapi_bp.param('field_name', ref=appapi_bp.create_ref_validator('field_name', 'parameters'))
+    @appapi_bp.response(HTTPStatus.OK, "Success", appapi_bp.create_ref_validator("ReadAllAppApis", "responses"))
     def get(self):
         field_name = await request.args.get('field_name')
-        # TODO: Remove this once connexion can validate enums with openapi3.
+        # TODO: Evaluate whether this is in line with best practices
         if field_name and field_name not in ['info', 'action_apis', 'condition_apis', 'transform_apis', 'device_apis',
                                              'tags', 'external_docs']:
             return Problem(BAD_REQUEST, 'Could not read app api.', '{} is not a valid field name.'.format(field_name))
@@ -136,30 +140,40 @@ def app_api_dne_problem(app_name):
     return Problem(OBJECT_DNE_ERROR, 'Could not read app api.', 'App {} does not exist.'.format(app_name))
 
 
+# @appapi_bp.route('/apps/apis/<app_name>')
+# class ReadAppApi(Resource):
+#     @jwt_required
+#     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
+#     @appapi_bp.param('app_name', ref=appapi_bp.create_ref_validator('app_name', 'parameters'))
+#     @appapi_bp.response(HTTPStatus.OK, "Success", appapi_bp.create_ref_validator("AppApi", "schemas"))
+#     def get(self, app_name):
+#         api = walkoff.config.app_apis.get(app_name, None)
+#         if api is not None:
+#             return format_full_app_api(api, app_name), SUCCESS
+#         else:
+#             return app_api_dne_problem(app_name)
+
+
 @appapi_bp.route('/apps/apis/<app_name>')
-class ReadAppApi(Resource):
-    @jwt_required
-    @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    def get(self, app_name):
-        api = walkoff.config.app_apis.get(app_name, None)
-        if api is not None:
-            return format_full_app_api(api, app_name), SUCCESS
-        else:
-            return app_api_dne_problem(app_name)
-
-
-@appapi_bp.route('/apps/apis/<app_name>/<field_name>')
 class ReadAppApiField(Resource):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
-    def get(self, app_name, field_name):
-        # TODO: Remove this once connexion can validate enums with openapi3.
+    @appapi_bp.param('app_name', ref=appapi_bp.create_ref_validator('app_name', 'parameters'))
+    @appapi_bp.param('field_name', ref=appapi_bp.create_ref_validator('field_name', 'parameters'))
+    @appapi_bp.response(HTTPStatus.OK, "Success", appapi_bp.create_ref_validator("AppApi", "schemas"))
+    def get(self, app_name):
+        field_name = await request.args.get('field_name')
+        # TODO: Evaluate whether this is in line with best practices
         if field_name not in ['info', 'action_apis', 'condition_apis', 'transform_apis', 'device_apis', 'tags',
                               'externalDocs']:
             return Problem(BAD_REQUEST, 'Could not read app api.', '{} is not a valid field name.'.format(field_name))
 
         api = walkoff.config.app_apis.get(app_name, None)
         if api is not None:
-            return format_full_app_api(api, app_name)[field_name], SUCCESS
+            r = format_full_app_api(api, app_name)
+            if field_name is not None:
+                return r[field_name], SUCCESS
+            else:
+                return r, SUCCESS
         else:
             return app_api_dne_problem(app_name)

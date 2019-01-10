@@ -2,13 +2,14 @@ import collections
 import json
 from functools import wraps
 
-from quart import Response, Blueprint
+from quart import Response
+from quart_openapi import PintBlueprint
 from six import string_types, binary_type
 
 from walkoff.cache import unsubscribe_message
 
 
-class StreamableBlueprint(Blueprint):
+class StreamableBlueprint(PintBlueprint):
     """Blueprint which has streams.
 
     This adds the ability to set the cache sued by the streams when the blueprint is registered

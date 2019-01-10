@@ -4,7 +4,12 @@ import json
 
 from quart import current_app, request, send_file
 from flask_jwt_extended import jwt_required
+from quart_openapi import Pint, Resource, PintBlueprint
 
+from http import HTTPStatus
+
+import walkoff.config
+from walkoff.helpers import load_yaml
 from walkoff.appgateway.apiutil import get_app_device_api, UnknownApp, UnknownDevice, InvalidArgument
 from walkoff.appgateway.validator import validate_device_fields
 from walkoff.executiondb.device import Device, App
@@ -23,72 +28,28 @@ with_device = with_resource_factory(
     lambda device_id: current_app.running_context.execution_db.session.query(Device).filter(
         Device.id == device_id).first())
 
-
-def get_device_json_with_app_name(device):
-    device_json = device.as_json()
-    app = current_app.running_context.execution_db.session.query(App).filter(App.id == device.app_id).first()
-    device_json['app_name'] = app.name if app is not None else ''
-    return device_json
+devices_bp = PintBlueprint(__name__, 'devices',
+                           base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "devices.yaml"))
 
 
-def read_all_devices():
+@devices_bp.route('/devices')
+class Devices(Resource):
+
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['read']))
-    def __func():
+    @devices_bp.response(HTTPStatus.OK, "Success", devices_bp.create_ref_validator("DeviceList", "responses"))
+    def get(self):
         page = request.args.get('page', 1, type=int)
         return [get_device_json_with_app_name(device) for device in
                 current_app.running_context.execution_db.session.query(Device).limit(
                     current_app.config['ITEMS_PER_PAGE']).offset((page-1) * current_app.config['ITEMS_PER_PAGE'])], SUCCESS
 
-    return __func()
 
 
-def read_device(device_id, mode=None):
-    @jwt_required
-    @permissions_accepted_for_resources(ResourcePermissions('devices', ['read']))
-    @with_device('read', device_id)
-    def __func(device):
-        if mode == "export":
-            f = StringIO()
-            f.write(json.dumps(get_device_json_with_app_name(device), sort_keys=True, indent=4, separators=(',', ': ')))
-            f.seek(0)
-            return send_file(f, attachment_filename=device.name + '.json', as_attachment=True), SUCCESS
-        else:
-            return get_device_json_with_app_name(device), SUCCESS
-
-    return __func()
-
-
-def delete_device(device_id):
-    @jwt_required
-    @permissions_accepted_for_resources(ResourcePermissions('devices', ['delete']))
-    @with_device('delete', device_id)
-    def __func(device):
-        current_app.running_context.execution_db.session.delete(device)
-        current_app.logger.info('Device removed {0}'.format(device_id))
-        current_app.running_context.execution_db.session.commit()
-        return None, NO_CONTENT
-
-    return __func()
-
-
-def add_configuration_keys_to_device_json(device_fields, device_fields_api):
-    device_fields_api = {field['name']: field for field in device_fields_api}
-    for field in device_fields:
-        add_configuration_keys_to_field(device_fields_api, field)
-
-
-def add_configuration_keys_to_field(device_fields_api, field):
-    if field['name'] in device_fields_api:
-        field['type'] = device_fields_api[field['name']]['type']
-        if 'encrypted' in device_fields_api[field['name']]:
-            field['encrypted'] = device_fields_api[field['name']]['encrypted']
-
-
-def create_device():
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['create']))
-    def __func():
+    @devices_bp.expect(devices_bp.create_ref_validator("deviceBody", "parameters"))
+    def post(self):
         if request.files and 'file' in request.files:
             f = request.files['file']
             add_device_json = json.loads(f.read().decode('utf-8'))
@@ -157,6 +118,26 @@ def patch_device():
     return __func()
 
 
+def get_device_json_with_app_name(device):
+    device_json = device.as_json()
+    app = current_app.running_context.execution_db.session.query(App).filter(App.id == device.app_id).first()
+    device_json['app_name'] = app.name if app is not None else ''
+    return device_json
+
+
+def add_configuration_keys_to_device_json(device_fields, device_fields_api):
+    device_fields_api = {field['name']: field for field in device_fields_api}
+    for field in device_fields:
+        add_configuration_keys_to_field(device_fields_api, field)
+
+
+def add_configuration_keys_to_field(device_fields_api, field):
+    if field['name'] in device_fields_api:
+        field['type'] = device_fields_api[field['name']]['type']
+        if 'encrypted' in device_fields_api[field['name']]:
+            field['encrypted'] = device_fields_api[field['name']]['encrypted']
+
+
 def _update_device(device, update_device_json, validate_required=True):
     fields = ({field['name']: field['value'] for field in update_device_json['fields']}
               if 'fields' in update_device_json else None)
@@ -189,3 +170,32 @@ def __crud_device_error_handler(operation, exception, app, device_type):
     message = 'Could not {0} device for app {1}, type {2}. {3}.'.format(operation, app, device_type, ret[0])
     current_app.logger.error(message)
     return Problem(INVALID_INPUT_ERROR, ret[1], message)
+
+
+def read_device(device_id, mode=None):
+    @jwt_required
+    @permissions_accepted_for_resources(ResourcePermissions('devices', ['read']))
+    @with_device('read', device_id)
+    def __func(device):
+        if mode == "export":
+            f = StringIO()
+            f.write(json.dumps(get_device_json_with_app_name(device), sort_keys=True, indent=4, separators=(',', ': ')))
+            f.seek(0)
+            return send_file(f, attachment_filename=device.name + '.json', as_attachment=True), SUCCESS
+        else:
+            return get_device_json_with_app_name(device), SUCCESS
+
+    return __func()
+
+
+def delete_device(device_id):
+    @jwt_required
+    @permissions_accepted_for_resources(ResourcePermissions('devices', ['delete']))
+    @with_device('delete', device_id)
+    def __func(device):
+        current_app.running_context.execution_db.session.delete(device)
+        current_app.logger.info('Device removed {0}'.format(device_id))
+        current_app.running_context.execution_db.session.commit()
+        return None, NO_CONTENT
+
+    return __func()
