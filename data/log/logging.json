@@ -128,7 +128,7 @@
     "handlers": [
       "console"
     ], 
-    "level": "ERROR"
+    "level": "INFO"
   }, 
   "version": 1
 }
