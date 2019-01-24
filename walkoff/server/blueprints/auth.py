@@ -20,12 +20,11 @@ invalid_username_password_problem = Problem(
     UNAUTHORIZED_ERROR, token_problem_title, 'Invalid username or password.')
 user_deactivated_problem = Problem(UNAUTHORIZED_ERROR, token_problem_title, 'User is deactivated.')
 
+blueprint = PintBlueprint(__name__, 'auth',
+                          base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "auth.yaml"))
 
-auth_bp = PintBlueprint(__name__, 'auth',
-                        base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "auth.yaml"))
 
-
-def _authenticate_and_grant_tokens(json_in, with_refresh=False):
+async def _authenticate_and_grant_tokens(json_in, with_refresh=False):
     username = json_in.get('username', None)
     password = json_in.get('password', None)
     if not (username and password):
@@ -52,24 +51,24 @@ def _authenticate_and_grant_tokens(json_in, with_refresh=False):
         return invalid_username_password_problem
 
 
-@auth_bp.route('/auth')
+@blueprint.route('/auth')
 class Login(Resource):
-    @auth_bp.expect(auth_bp.create_ref_validator("Authentication", "schemas"))
-    @auth_bp.response(HTTPStatus.OK, "Success", auth_bp.create_ref_validator("Token", "schemas"))
-    @auth_bp.response(HTTPStatus.UNAUTHORIZED, "Unauthorized", auth_bp.create_ref_validator("Error", "schemas"))
+    @blueprint.expect(blueprint.create_ref_validator("Authentication", "schemas"))
+    @blueprint.response(HTTPStatus.OK, "Success", blueprint.create_ref_validator("Token", "schemas"))
+    @blueprint.response(HTTPStatus.UNAUTHORIZED, "Unauthorized", blueprint.create_ref_validator("Error", "schemas"))
     async def post(self):
-        return _authenticate_and_grant_tokens(request.get_json(), with_refresh=True)
+        return await _authenticate_and_grant_tokens(await request.get_json(), with_refresh=True)
 
 
-def fresh_login():
-    return _authenticate_and_grant_tokens(request.get_json(), with_refresh=False)
+async def fresh_login():
+    return await _authenticate_and_grant_tokens(await request.get_json(), with_refresh=False)
 
 
-@auth_bp.route('/auth/refresh')
+@blueprint.route('/auth/refresh')
 class Refresh(Resource):
     @jwt_refresh_token_required
-    @auth_bp.response(HTTPStatus.OK, "Success", auth_bp.create_ref_validator("Token", "schemas"))
-    @auth_bp.response(HTTPStatus.UNAUTHORIZED, "Unauthorized", auth_bp.create_ref_validator("Error", "schemas"))
+    @blueprint.response(HTTPStatus.OK, "Success", blueprint.create_ref_validator("Token", "schemas"))
+    @blueprint.response(HTTPStatus.UNAUTHORIZED, "Unauthorized", blueprint.create_ref_validator("Error", "schemas"))
     async def post(self, body=None, token_info=None, user=None):
         current_user_id = get_jwt_identity()
         user = User.query.filter(User.id == current_user_id).first()
@@ -85,14 +84,14 @@ class Refresh(Resource):
             return user_deactivated_problem
 
 
-@auth_bp.route('/auth/logout')
+@blueprint.route('/auth/logout')
 class Logout(Resource):
     from walkoff.serverdb.tokens import revoke_token
 
     @jwt_required
-    @auth_bp.expect(auth_bp.create_ref_validator("RevokeToken", "schemas"))
-    @auth_bp.response(HTTPStatus.NO_CONTENT, "Success")
-    @auth_bp.response(HTTPStatus.BAD_REQUEST, "Invalid Refresh Token", auth_bp.create_ref_validator("Error", "schemas"))
+    @blueprint.expect(blueprint.create_ref_validator("RevokeToken", "schemas"))
+    @blueprint.response(HTTPStatus.NO_CONTENT, "Success")
+    @blueprint.response(HTTPStatus.BAD_REQUEST, "Invalid Refresh Token", blueprint.create_ref_validator("Error", "schemas"))
     def post(self):
         data = request.get_json()
         refresh_token = data.get('refresh_token', None) if data else None

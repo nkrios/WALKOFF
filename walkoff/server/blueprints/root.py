@@ -1,3 +1,5 @@
+from quart import flask_patch
+
 import logging
 import os
 
@@ -6,6 +8,7 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from quart import current_app
 from quart import render_template, send_from_directory, Blueprint
+from quart_openapi import PintBlueprint, Resource
 from sqlalchemy.exc import SQLAlchemyError
 
 import walkoff.config
@@ -17,36 +20,42 @@ from walkoff.server.returncodes import SERVER_ERROR
 
 logger = logging.getLogger(__name__)
 
-root_page = Blueprint('root_page', __name__)
+root_page = PintBlueprint('root_page', __name__)
 
 
 # Custom static data
-@root_page.route('client/<path:filename>')
-def client_app_folder(filename):
-    return send_from_directory(os.path.abspath(walkoff.config.Config.CLIENT_PATH), filename)
+@root_page.route('/client/<path:filename>')
+class Client(Resource):
+    async def get(self, filename):
+        return await send_from_directory(os.path.abspath(walkoff.config.Config.CLIENT_PATH), filename)
 
 
 @root_page.route('/')
-@root_page.route('playbook')
-@root_page.route('execution')
-@root_page.route('scheduler')
-@root_page.route('devices')
-@root_page.route('messages')
-@root_page.route('metrics')
-@root_page.route('settings')
-def default():
-    return send_from_directory(os.path.abspath(walkoff.config.Config.CLIENT_PATH), "dist/index.html")
-    # return render_template("index.html")
+@root_page.route('/playbook')
+@root_page.route('/execution')
+@root_page.route('/scheduler')
+@root_page.route('/devices')
+@root_page.route('/messages')
+@root_page.route('/metrics')
+@root_page.route('/settings')
+class Default(Resource):
+    async def get(self):
+        print(os.path.abspath(walkoff.config.Config.CLIENT_PATH))
+        print(walkoff.config.Config.CLIENT_PATH)
+        return await send_from_directory(os.path.abspath(walkoff.config.Config.CLIENT_PATH), "dist/index.html")
+        # return render_template("index.html")
 
 
-@root_page.route('interfaces/<interface_name>')
-def app_page(interface_name):
-    return render_template("index.html")
+@root_page.route('/interfaces/<interface_name>')
+class AppPage(Resource):
+    async def get(self, interface_name):
+        return await render_template("index.html")
 
 
-@root_page.route('login')
-def login_page():
-    return render_template("login.html")
+@root_page.route('/login')
+class LoginPage(Resource):
+    async def get(self):
+        return await render_template("login.html")
 
 
 @root_page.errorhandler(SQLAlchemyError)
@@ -103,13 +112,13 @@ def create_user():
         current_app.running_context.execution_db.session.add(App(name=app_name, devices=[]))
     db.session.commit()
     current_app.running_context.execution_db.session.commit()
-    reschedule_all_workflows()
+    # reschedule_all_workflows()
     current_app.logger.handlers = logging.getLogger('server').handlers
 
 
-def reschedule_all_workflows():
-    from walkoff.serverdb.scheduledtasks import ScheduledTask
-    current_app.logger.info('Scheduling workflows')
-    for task in (task for task in ScheduledTask.query.all() if task.status == 'running'):
-        current_app.logger.debug('Rescheduling task {} (id={})'.format(task.name, task.id))
-        task._start_workflows()
+# def reschedule_all_workflows():
+#     from walkoff.serverdb.scheduledtasks import ScheduledTask
+#     current_app.logger.info('Scheduling workflows')
+#     for task in (task for task in ScheduledTask.query.all() if task.status == 'running'):
+#         current_app.logger.debug('Rescheduling task {} (id={})'.format(task.name, task.id))
+#         task._start_workflows()

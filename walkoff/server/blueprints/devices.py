@@ -32,6 +32,13 @@ devices_bp = PintBlueprint(__name__, 'devices',
                            base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "devices.yaml"))
 
 
+def crud_device_error_handler(operation, exception, app, device_type):
+    ret = __device_error_messages[exception.__class__]
+    message = 'Could not {0} device for app {1}, type {2}. {3}.'.format(operation, app, device_type, ret[0])
+    current_app.logger.error(message)
+    return Problem(INVALID_INPUT_ERROR, ret[1], message)
+
+
 @devices_bp.route('/devices')
 class Devices(Resource):
 
@@ -43,8 +50,6 @@ class Devices(Resource):
         return [get_device_json_with_app_name(device) for device in
                 current_app.running_context.execution_db.session.query(Device).limit(
                     current_app.config['ITEMS_PER_PAGE']).offset((page-1) * current_app.config['ITEMS_PER_PAGE'])], SUCCESS
-
-
 
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['create']))
@@ -73,7 +78,7 @@ class Devices(Resource):
             device_fields_api = device_api['fields']
             validate_device_fields(device_fields_api, fields, device_type, app)
         except (UnknownApp, UnknownDevice, InvalidArgument) as e:
-            return __crud_device_error_handler('create', e, app, device_type)
+            return crud_device_error_handler('create', e, app, device_type)
         else:
             fields = add_device_json['fields']
             add_configuration_keys_to_device_json(fields, device_fields_api)
@@ -93,29 +98,19 @@ class Devices(Resource):
             device_json = get_device_json_with_app_name(device)
             return device_json, OBJECT_CREATED
 
-    return __func()
-
-
-def update_device():
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['update']))
     @with_device('update', request.get_json()['id'])
-    def __func(device):
+    def put(self, device):
         update_device_json = request.get_json()
         return _update_device(device, update_device_json)
 
-    return __func()
-
-
-def patch_device():
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['update']))
     @with_device('update', request.get_json()['id'])
-    def __func(device):
+    def patch(self, device):
         update_device_json = request.get_json()
         return _update_device(device, update_device_json, validate_required=False)
-
-    return __func()
 
 
 def get_device_json_with_app_name(device):
@@ -149,7 +144,7 @@ def _update_device(device, update_device_json, validate_required=True):
         if fields is not None:
             validate_device_fields(device_fields_api, fields, device_type, app, validate_required=validate_required)
     except (UnknownApp, UnknownDevice, InvalidArgument) as e:
-        return __crud_device_error_handler('update', e, app, device_type)
+        return crud_device_error_handler('update', e, app, device_type)
     else:
         if fields is not None:
             fields = update_device_json['fields'] if 'fields' in update_device_json else None
@@ -165,12 +160,8 @@ __device_error_messages = {UnknownApp: ('App does not exist', 'Unknown app.'),
                            InvalidArgument: ('Invalid input', 'Invalid device fields.')}
 
 
-def __crud_device_error_handler(operation, exception, app, device_type):
-    ret = __device_error_messages[exception.__class__]
-    message = 'Could not {0} device for app {1}, type {2}. {3}.'.format(operation, app, device_type, ret[0])
-    current_app.logger.error(message)
-    return Problem(INVALID_INPUT_ERROR, ret[1], message)
-
+@devices_bp.route('/devices/<device_id>')
+class SingleDevice(Resource):
 
 def read_device(device_id, mode=None):
     @jwt_required
