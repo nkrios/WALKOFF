@@ -42,12 +42,11 @@ async def _authenticate_and_grant_tokens(json_in, with_refresh=False):
     if user.verify_password(password):
         response = {'access_token': create_access_token(identity=user.id, fresh=True)}
         if with_refresh:
-            user.login(request.environ.get('HTTP_X_REAL_IP', request.remote_addr))
+            user.login(request.remote_addr)
             db.session.commit()
             response['refresh_token'] = create_refresh_token(identity=user.id)
-        return response, OBJECT_CREATED
+        return jsonify(response), OBJECT_CREATED
     else:
-
         return invalid_username_password_problem
 
 
