@@ -1,0 +1,23 @@
+components:
+  parameters:
+    interface_id:
+      in: query
+      description: ID of the interface
+      type: string
+      required: false
+    interface_name:
+      in: query
+      description: Name of the interface
+      type: string
+      required: true
+    widgets:
+      in: query
+      description: the list of widgets and their components
+      type: object
+      required: false
+  responses:
+      create_interface:
+        type: string
+        description: A confirmation message on successful creation
+        items:
+          type: object

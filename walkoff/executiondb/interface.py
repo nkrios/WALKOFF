@@ -3,10 +3,11 @@ import sys
 
 import nacl.secret
 import nacl.utils
-from sqlalchemy import JSON, Column, Integer, ForeignKey, String, LargeBinary, Enum, DateTime, func, orm, and_
+from sqlalchemy import JSON, Column, Integer, ForeignKey, String, orm, and_
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
+from uuid import uuid4
 
 import walkoff.config
 from walkoff.appgateway.validator import convert_primitive_type
@@ -32,11 +33,12 @@ class Interface(Execution_Base):
     """
     __tablename__ = 'interface'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, default=uuid4)
     name = Column('name', String, nullable=False)
     widgets = relationship('InterfaceWidget')
 
     def __init__(self, name, widgets=None):
+
         self.name = name
         if widgets is not None:
             for widget in widgets:
@@ -47,8 +49,7 @@ class Interface(Execution_Base):
             no device will be added
 
         Args:
-            device (Device): The device to add
+            widget (widget): The widget to add
         """
         if not any(widget.name == widget.name for widget in self.widgets):
             self.widgets.append(widget)
-
