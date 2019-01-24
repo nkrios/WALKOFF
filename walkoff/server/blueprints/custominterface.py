@@ -1,6 +1,8 @@
+import quart.flask_patch
+
 import os
 
-from flask import Blueprint, render_template, g, abort
+from quart import Blueprint, render_template, g, abort
 from flask_jwt_extended import jwt_required
 from jinja2 import TemplateNotFound
 

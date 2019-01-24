@@ -1,3 +1,5 @@
+import quart.flask_patch
+
 import argparse
 import logging
 import os
@@ -32,8 +34,10 @@ def run(args, app, host, port):
     app.running_context.executor.initialize_threading(app, pids)
     # The order of these imports matter for initialization (should probably be fixed)
 
-    server = setup_server(app, host, port)
-    server.serve_forever()
+    # server = setup_server(app, host, port)
+    # server.serve_forever()
+    print(app, type(app))
+    app.run(host, port)
 
 
 def print_banner():

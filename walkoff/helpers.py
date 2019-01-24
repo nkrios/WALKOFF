@@ -7,6 +7,7 @@ import sys
 import warnings
 from datetime import datetime
 from uuid import uuid4
+from ruamel.yaml import YAML
 
 try:
     from importlib import reload as reload_module
@@ -147,12 +148,16 @@ def format_exception_message(exception):
 
 
 def convert_action_argument(argument):
-    for field in ('value', 'selection'):
-        if field in argument:
-            try:
-                argument[field] = json.loads(argument[field])
-            except ValueError:
-                pass
+    if 'value' in argument:
+        try:
+            argument['value'] = json.loads(argument['value'])
+        except ValueError:
+            pass
+    if 'selection' in argument:
+        tmp = []
+        for arg in argument['selection']:
+            tmp.append(convert_action_argument(arg))
+        argument['selection'] = tmp
     return argument
 
 
@@ -290,6 +295,14 @@ def compose_api(config):
                 final_yaml.append(line)
     with open(os.path.join(config.API_PATH, 'composed_api.yaml'), 'w') as composed_yaml:
         composed_yaml.writelines(final_yaml)
+
+
+def load_yaml(directory, filename, mode='safe'):
+    yaml = YAML(typ=mode)
+    with open(os.path.join(directory, filename), 'r') as f:
+        r = yaml.load(f)
+
+    return r
 
 
 class ExecutionError(Exception):

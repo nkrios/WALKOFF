@@ -1,25 +1,23 @@
+import quart.flask_patch
+
 import json
 import logging
 from functools import wraps
 
-from flask import request
 from flask_jwt_extended import get_jwt_claims
 from flask_jwt_extended.config import config
-from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended.tokens import decode_jwt
-from flask_jwt_extended.view_decorators import _load_user
 
 import walkoff.serverdb
 from walkoff.extensions import jwt
-from walkoff.server.returncodes import FORBIDDEN_ERROR
-from walkoff.server.returncodes import UNAUTHORIZED_ERROR
+from walkoff.server.returncodes import FORBIDDEN_ERROR, UNAUTHORIZED_ERROR
 from walkoff.serverdb import User
 from walkoff.serverdb.tokens import is_token_revoked
 
 try:
-    from flask import _app_ctx_stack as ctx_stack
+    from quart import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
-    from flask import _request_ctx_stack as ctx_stack
+    from quart import _request_ctx_stack as ctx_stack
 
 logger = logging.getLogger(__name__)
 
@@ -90,34 +88,10 @@ def expired_token_callback():
     return {'error': 'Token expired'}, UNAUTHORIZED_ERROR
 
 
-def jwt_required_in_query(query_name):
-    def wrapped(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            jwt_data = _decode_jwt_from_query_string(query_name)
-            ctx_stack.top.jwt = jwt_data
-            _load_user(jwt_data[config.identity_claim_key])
-            return fn(*args, **kwargs)
-
-        return wrapper
-
-    return wrapped
-
-
-def _decode_jwt_from_query_string(param_name):
-    # Verify we have the query string
-    token = request.args.get(param_name, None)
-    if not token:
-        raise NoAuthorizationError("Missing {} query param".format(param_name))
-
-    return decode_jwt(
-        encoded_token=token,
-        secret=config.decode_key,
-        algorithm=config.algorithm,
-        csrf_value=None,
-        user_claims_key=config.user_claims_key,
-        identity_claim_key=config.identity_claim_key
-    )
+# This function is necessary for connexion update to v2.0
+def decode_token(token):
+    return decode_jwt(encoded_token=token, secret=config.decode_key, algorithm=config.algorithm, csrf_value=None,
+                      user_claims_key=config.user_claims_key, identity_claim_key=config.identity_claim_key)
 
 
 class ResourcePermissions:

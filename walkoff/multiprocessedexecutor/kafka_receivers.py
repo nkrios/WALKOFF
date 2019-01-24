@@ -2,7 +2,7 @@ import logging
 
 import gevent
 from confluent_kafka import Consumer, KafkaError
-from flask import Flask
+from quart import Quart
 
 import walkoff.config
 from walkoff.events import WalkoffEvent
@@ -27,7 +27,7 @@ class KafkaWorkflowResultsReceiver(object):
         self.workflows_executed = 0
 
         if current_app is None:
-            self.current_app = Flask(__name__)
+            self.current_app = Quart(__name__)
             self.current_app.config.from_object(walkoff.config.Config)
             self.current_app.running_context = context.Context(init_all=False)
         else:

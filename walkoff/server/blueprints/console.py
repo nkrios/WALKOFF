@@ -1,16 +1,24 @@
+import quart.flask_patch
+
 import logging
 from uuid import UUID
 
-from flask import request
+from quart import request
+from quart_openapi import Resource
+from flask_jwt_extended import jwt_required
 
+from http import HTTPStatus
+
+import walkoff.config
+from walkoff.helpers import load_yaml
 from walkoff.events import WalkoffEvent
-from walkoff.security import jwt_required_in_query
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import BAD_REQUEST
 from walkoff.sse import FilteredSseStream, StreamableBlueprint
 
 console_stream = FilteredSseStream('console_results')
-console_page = StreamableBlueprint('console_page', __name__, streams=(console_stream,))
+console_page = StreamableBlueprint('console_page', __name__, streams=(console_stream,),
+                                   base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "console.yaml"))
 
 
 def format_console_data(sender, data):
@@ -33,20 +41,24 @@ def console_log_callback(sender, **kwargs):
     return format_console_data(sender, kwargs["data"]), sender['execution_id']
 
 
-@console_page.route('/log', methods=['GET'])
-@jwt_required_in_query('access_token')
-def stream_console_events():
-    workflow_execution_id = request.args.get('workflow_execution_id')
-    if workflow_execution_id is None:
-        return Problem(
-            BAD_REQUEST,
-            'Could not connect to log stream',
-            'workflow_execution_id is a required query param')
-    try:
-        UUID(workflow_execution_id)
-        return console_stream.stream(subchannel=workflow_execution_id)
-    except (ValueError, AttributeError):
-        return Problem(
-            BAD_REQUEST,
-            'Could not connect to log stream',
-            'workflow_execution_id must be a valid UUID')
+@console_page.route('/log')
+class StreamConsoleEvents(Resource):
+    @jwt_required
+    @console_page.param("workflow_execution_id",
+                        console_page.create_ref_validator("workflow_execution_id", "parameters"))
+    @console_page.response(HTTPStatus.OK, "Success")  # TODO: Schema for returned SSE
+    def get(self):
+        workflow_execution_id = request.args.get('workflow_execution_id')
+        if workflow_execution_id is None:
+            return Problem(
+                BAD_REQUEST,
+                'Could not connect to log stream',
+                'workflow_execution_id is a required query param')
+        try:
+            UUID(workflow_execution_id)
+            return console_stream.stream(subchannel=workflow_execution_id)
+        except (ValueError, AttributeError):
+            return Problem(
+                BAD_REQUEST,
+                'Could not connect to log stream',
+                'workflow_execution_id must be a valid UUID')

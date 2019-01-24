@@ -1,6 +1,6 @@
 import json
 
-from flask import current_app
+from quart import current_app
 
 from tests.util.servertestcase import ServerTestCase
 from walkoff.scheduler import InvalidTriggerArgs

@@ -1,7 +1,7 @@
 import json
 import logging
 
-from flask import current_app
+from quart import current_app
 
 import walkoff.messaging
 from walkoff.events import WalkoffEvent

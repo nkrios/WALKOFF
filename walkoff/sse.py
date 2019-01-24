@@ -2,13 +2,14 @@ import collections
 import json
 from functools import wraps
 
-from flask import Response, Blueprint
+from quart import Response
+from quart_openapi import PintBlueprint
 from six import string_types, binary_type
 
 from walkoff.cache import unsubscribe_message
 
 
-class StreamableBlueprint(Blueprint):
+class StreamableBlueprint(PintBlueprint):
     """Blueprint which has streams.
 
     This adds the ability to set the cache sued by the streams when the blueprint is registered
@@ -162,9 +163,9 @@ class SseStream(object):
         self.cache.publish(self.channel, json.dumps(response))
 
     def stream(self, headers=None, retry=None, **kwargs):
-        """Returns a response used by Flask to create an SSE stream.
+        """Returns a response used by quart to create an SSE stream.
 
-        This function should be called as the return from a Flask view function
+        This function should be called as the return from a quart view function
 
         Args:
             headers (dict): The headers to use for this steam. Some default headers are included by in the
@@ -172,7 +173,7 @@ class SseStream(object):
             retry (int): The
 
         Returns:
-            (Response): A Flask Response object which creates the SSE stream
+            (Response): A quart Response object which creates the SSE stream
 
         """
         stream_headers = self._default_headers
@@ -283,9 +284,9 @@ class FilteredSseStream(SseStream):
         return self.cache.subscribe(self.create_subchannel_name(kwargs.get('subchannel', '')))
 
     def stream(self, subchannel='', headers=None, retry=None):
-        """Returns a response used by Flask to create an SSE stream.
+        """Returns a response used by quart to create an SSE stream.
 
-        This function should be called as the return from a Flask view function
+        This function should be called as the return from a quart view function
 
         Args:
             subchannel: The subchannel id
@@ -294,7 +295,7 @@ class FilteredSseStream(SseStream):
             retry (int): The
 
         Returns:
-            (Response): A Flask Response object which creates the SSE stream
+            (Response): A quart Response object which creates the SSE stream
 
         """
         stream_headers = self._default_headers

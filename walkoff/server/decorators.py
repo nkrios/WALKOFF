@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from flask import current_app
+from quart import current_app
 
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import OBJECT_DNE_ERROR, BAD_REQUEST
@@ -22,7 +22,7 @@ def log_operation_error(resource, operation, id_):
     current_app.logger.error('Could not {} {} {}. {} does not exist'.format(operation, resource, id_, resource))
 
 
-def dne_error(resource, operation, ids):
+async def dne_error(resource, operation, ids):
     id_str = get_id_str(ids)
     log_operation_error(resource, operation, id_str)
     return lambda: (resource_not_found_problem(resource, operation, id_str))
@@ -47,20 +47,35 @@ def invalid_id_problem(resource, operation):
 
 
 def with_resource_factory(resource_name, getter_func, validator=None):
-    def validate_resource_exists(operation, *ids):
-        def wrapper(func):
-            if validator and not validator(*ids):
-                return lambda: invalid_id_problem(resource_name, operation)
+    """Factory pattern which takes in resource name and resource specific functions, returns a validator decorator"""
+    print("validator factory")
 
-            obj = getter_func(*ids)
-            if obj is not None:
-                return lambda: func(obj)
-            else:
-                return dne_error(resource_name, operation, ids)
+    def arg_wrapper(operation, id_param):
+        """This decorator serves to take in the args to the decorator call and make it available below"""
+        print("arg wrapper")
 
-        return wrapper
+        def func_wrapper(func):
+            """This decorator serves to wrap the actual decorated function and return the replacement function below"""
+            print("func wrapper")
 
-    return validate_resource_exists
+            async def func_caller(*args, **kwargs):
+                """This decorator is the actual replacement function for the decorated function"""
+                print("func caller")
+                print(func, operation, id_param, args, kwargs)
+                if validator and not validator(id_param):
+                    return await invalid_id_problem(resource_name, operation)
+
+                kwargs[id_param] = getter_func(kwargs[id_param])
+                if kwargs[id_param]:
+                    return await func(*args, **kwargs)
+                else:
+                    return await dne_error(resource_name, operation, kwargs[id_param])
+
+            return func_caller
+
+        return func_wrapper
+
+    return arg_wrapper
 
 
 def is_valid_uid(*ids):
