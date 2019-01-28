@@ -8,7 +8,8 @@ import warnings
 from datetime import datetime
 from uuid import uuid4
 from ruamel.yaml import YAML
-
+from dollar_ref.console import main as deref
+from pathlib import Path
 try:
     from importlib import reload as reload_module
 except ImportError:
@@ -295,6 +296,13 @@ def compose_api(config):
                 final_yaml.append(line)
     with open(os.path.join(config.API_PATH, 'composed_api.yaml'), 'w') as composed_yaml:
         composed_yaml.writelines(final_yaml)
+
+
+def compose_api2(config):
+    deref(custom_args=[
+        str(Path(config.API_PATH) / "api.yaml"),
+        str(Path(config.API_PATH) / "composed_api.yaml")
+    ])
 
 
 def load_yaml(directory, filename, mode='safe'):

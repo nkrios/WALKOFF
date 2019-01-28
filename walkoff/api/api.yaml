@@ -1,0 +1,56 @@
+components:
+  # Reusable schemas (data models)
+  schemas:
+    # objects.yaml#/components/schemas
+    Error:
+      $ref: "objects.yaml#/components/schemas/Error"
+    AvailableSubscriptions:
+      $ref: "objects.yaml#/components/schemas/AvailableSubscriptions"
+    Uuid:
+      $ref: "objects.yaml#/components/schemas/Uuid"
+
+    # auth.yaml#/components/schemas/
+    Authentication:
+      $ref: "auth.yaml#/components/schemas/Authentication"
+    Token:
+      $ref: "auth.yaml#/components/schemas/Token"
+    RevokeToken:
+      $ref: "auth.yaml#/components/schemas/RevokeToken"
+
+    # users.yaml#/components/schemas/
+    AddUser:
+      $ref: "users.yaml#/components/schemas/AddUser"
+    EditUser:
+      $ref: "users.yaml#/components/schemas/EditUser"
+    DisplayUser:
+      $ref: "users.yaml#/components/schemas/DisplayUser"
+    RoleIdList:
+      $ref: "users.yaml#/components/schemas/RoleIdList"
+
+  # Reusable path, query, header and cookie parameters
+  parameters:
+    # objects.yaml#/components/parameters
+    page:
+      $ref: "objects.yaml#/components/parameters/page"
+
+  # Security scheme definitions (see Authentication)
+  securitySchemes:
+    {}
+  # Reusable request bodies
+  requestBodies:
+    {}
+  # Reusable responses, such as 401 Unauthorized or 400 Bad Request
+  responses:
+    {}
+  # Reusable response headers
+  headers:
+    {}
+  # Reusable examples
+  examples:
+    {}
+  # Reusable links
+  links:
+    {}
+  # Reusable callbacks
+  callbacks:
+    {}

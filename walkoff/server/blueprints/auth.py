@@ -8,7 +8,7 @@ from flask_jwt_extended import (jwt_refresh_token_required, create_access_token,
 
 from http import HTTPStatus
 
-import walkoff.config
+from walkoff.config import Config
 from walkoff.helpers import load_yaml
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
@@ -21,7 +21,7 @@ invalid_username_password_problem = Problem(
 user_deactivated_problem = Problem(UNAUTHORIZED_ERROR, token_problem_title, 'User is deactivated.')
 
 blueprint = PintBlueprint(__name__, 'auth',
-                          base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "auth.yaml"))
+                          base_model_schema=load_yaml(Config.API_PATH, "composed_api.yaml"))
 
 
 async def _authenticate_and_grant_tokens(json_in, with_refresh=False):

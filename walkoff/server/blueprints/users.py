@@ -1,6 +1,9 @@
 import quart.flask_patch
 
+from http import HTTPStatus
+
 from quart import request, current_app
+from quart_openapi import PintBlueprint, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from walkoff.extensions import db
@@ -10,25 +13,31 @@ from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
 from walkoff.serverdb import add_user
 from walkoff.serverdb.user import User
+from walkoff.helpers import load_yaml
+from walkoff.config import Config
 
 with_user = with_resource_factory('user', lambda user_id: User.query.filter_by(id=user_id).first())
 
+blueprint = PintBlueprint(__name__, 'users',
+                          base_model_schema=load_yaml(Config.API_PATH, "composed_api.yaml"))
 
-def read_all_users():
-    @jwt_required
+
+@blueprint.route("/users")
+class Users(Resource):
+    # @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('users', ['read']))
-    def __func():
+    @blueprint.param("page", ref=blueprint.create_ref_validator("page", "parameters"))
+    @blueprint.response(HTTPStatus.OK, "Success", blueprint.create_ref_validator("UsersGet200", "responses"))
+    def get(self):
         page = request.args.get('page', 1, type=int)
+        print(page)
         return [user.as_json() for user in
                 User.query.paginate(page, current_app.config['ITEMS_PER_PAGE'], False).items], SUCCESS
 
-    return __func()
-
-
-def create_user():
-    @jwt_required
+    # @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('users', ['create']))
-    def __func():
+    @blueprint.expect(blueprint.create_ref_validator("UsersPost", "requestBodies"))
+    def post(self):
         data = request.get_json()
         username = data['username']
         if not User.query.filter_by(username=username).first():
@@ -47,19 +56,6 @@ def create_user():
                 'user',
                 'create',
                 'User with username {} already exists'.format(username))
-
-    return __func()
-
-
-def read_user(user_id):
-    @jwt_required
-    @permissions_accepted_for_resources(ResourcePermissions('users', ['read']))
-    @with_user('read', user_id)
-    def __func(user):
-        return user.as_json(), SUCCESS
-
-    return __func()
-
 
 def update_user():
     user_id = request.get_json()['id']
@@ -122,6 +118,16 @@ def update_user_fields(data, user):
     db.session.commit()
     current_app.logger.info('Updated user {0}. Updated to: {1}'.format(user.id, user.as_json()))
     return user.as_json(), SUCCESS
+
+
+def read_user(user_id):
+    @jwt_required
+    @permissions_accepted_for_resources(ResourcePermissions('users', ['read']))
+    @with_user('read', user_id)
+    def __func(user):
+        return user.as_json(), SUCCESS
+
+    return __func()
 
 
 def delete_user(user_id):

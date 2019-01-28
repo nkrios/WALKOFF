@@ -31,13 +31,13 @@ class Client(Resource):
 
 
 @root_page.route('/')
-@root_page.route('/playbook')
-@root_page.route('/execution')
-@root_page.route('/scheduler')
-@root_page.route('/devices')
-@root_page.route('/messages')
-@root_page.route('/metrics')
-@root_page.route('/settings')
+# @root_page.route('/playbook')
+# @root_page.route('/execution')
+# @root_page.route('/scheduler')
+# @root_page.route('/devices')
+# @root_page.route('/messages')
+# @root_page.route('/metrics')
+# @root_page.route('/settings')
 class Default(Resource):
     async def get(self):
         print(os.path.abspath(walkoff.config.Config.CLIENT_PATH))
@@ -46,10 +46,10 @@ class Default(Resource):
         # return render_template("index.html")
 
 
-@root_page.route('/interfaces/<interface_name>')
-class AppPage(Resource):
-    async def get(self, interface_name):
-        return await render_template("index.html")
+# @root_page.route('/interfaces/<interface_name>')
+# class AppPage(Resource):
+#     async def get(self, interface_name):
+#         return await render_template("index.html")
 
 
 @root_page.route('/login')

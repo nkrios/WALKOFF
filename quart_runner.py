@@ -14,23 +14,28 @@ from http import HTTPStatus
 
 from jinja2 import FileSystemLoader
 
+from walkoff.helpers import compose_api2
+
 from walkoff.server.context import Context
 
-from walkoff.server.blueprints import auth
 from walkoff.server.blueprints import root
+from walkoff.server.blueprints import auth
+from walkoff.server.blueprints import users
 
 from walkoff.extensions import db, jwt
 
 
 def register_blueprints(app_):
-    app_.register_blueprint(auth.blueprint)
     app_.register_blueprint(root.root_page)
+    app_.register_blueprint(auth.blueprint, url_prefix="/api")
+    app_.register_blueprint(users.blueprint)
     swaggerui_blueprint = get_swaggerui_blueprint("/api/docs", "/openapi.json")
     app_.register_blueprint(swaggerui_blueprint, url_prefix="/api/docs")
 
 
 def create_app():
     config.initialize()
+    compose_api2(config.Config)
 
     app_ = Pint(__name__, base_model_schema=load_yaml(config.Config.API_PATH, "composed_api.yaml"),
                 template_folder="walkoff/templates")

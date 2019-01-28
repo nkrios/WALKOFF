@@ -9,7 +9,6 @@ components:
           type: string
         password:
           type: string
-
     Token:
       type: object
       required: [access_token]
@@ -20,7 +19,6 @@ components:
         refresh_token:
           type: string
           description: Long-lived JWT used to refresh a token
-
     RevokeToken:
       type: object
       required: [refresh_token]

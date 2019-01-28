@@ -177,7 +177,7 @@ class ActionSchema(ActionableSchema):
 
 class WorkflowSchema(ExecutionElementBaseSchema):
     """Schema for workflows
-    """
+    """/api
     name = field_for(Workflow, 'name', required=True)
     actions = fields.Nested(ActionSchema, many=True)
     branches = fields.Nested(BranchSchema, many=True)
