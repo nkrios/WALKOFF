@@ -9,6 +9,9 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import NullPool
 from sqlalchemy_utils import database_exists, create_database
 
+
+from walkoff.extensions import db
+
 import walkoff.config
 from walkoff.helpers import format_db_path
 
@@ -86,7 +89,6 @@ class ExecutionDatabase(object):
         self.session.rollback()
         self.connection.close()
         self.engine.dispose()
-
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):

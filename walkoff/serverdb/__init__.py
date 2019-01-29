@@ -4,7 +4,8 @@ from walkoff.extensions import db
 from walkoff.serverdb.resource import Resource, Permission
 from walkoff.serverdb.role import Role
 from walkoff.serverdb.user import User
-
+from walkoff.serverdb.interface import Interface
+from walkoff.serverdb.interface_widget import Widget
 logger = logging.getLogger(__name__)
 
 default_resource_permissions_admin = [{"name": "app_apis", "permissions": ["read"]},
@@ -130,3 +131,16 @@ def remove_user(username):
         username (str): The username of the User to delete.
     """
     User.query.filter_by(username=username).delete()
+
+
+def add_interface(name, widgets=None):
+    #print("name: {}, widgets: {}".format(name, widgets))
+
+    if Interface.query.filter_by(name=name).first() is None:
+        i = Interface(name, widgets=widgets)
+        db.session.add(i)
+        db.session.commit()
+        return i
+    else:
+        return None
+

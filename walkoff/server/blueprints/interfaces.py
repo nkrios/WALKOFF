@@ -7,9 +7,11 @@ from flask_swagger_ui import get_swaggerui_blueprint
 from http import HTTPStatus
 from walkoff.helpers import load_yaml
 from walkoff.extensions import db
-
-# from .helper import load_yaml
-# from .auth import blueprint as auth_bp
+from walkoff.serverdb import add_interface
+from walkoff.serverdb import Interface
+from walkoff.server.returncodes import *
+from quart import request, current_app
+from walkoff.server.problem import Problem
 
 from ruamel.yaml import YAML
 
@@ -20,7 +22,7 @@ app = PintBlueprint(__name__, "interfaces", base_model_schema=load_yaml(config.C
 # @app.param("test_query", ref=app.create_ref_validator("test_query", "parameters"))
 #@jwt_required
 @app.route('/interfaces/<uuid>')
-class Interface(Resource):
+class InterfaceEndpoint(Resource):
 
     # [GET] /interfaces/[uuid] - Get specific interface
     # @interface_validator("blah")
@@ -53,7 +55,7 @@ class Interface(Resource):
 
 
 @app.route('/interfaces')
-class Interfaces(Resource):
+class InterfacesEndpoint(Resource):
 
     # [GET] /interfaces - List all interfaces
     @app.response(HTTPStatus.OK, "Success", app.create_ref_validator("test_response", "responses"))
@@ -66,18 +68,27 @@ class Interfaces(Resource):
         return jsonify(query)
 
     # [POST] /interfaces - Create an interface
-    @app.response(HTTPStatus.OK, "Success", app.create_ref_validator("test_response", "responses"))
-    async def post(self, query_params):
+    #@app.expect(app.create_ref_validator("interface_name", "parameters"))
+    @app.response(HTTPStatus.OK, "Success", app.create_ref_validator("create_interface_201", "responses"))
+    async def post(self):
         """
         Interface Post
         This is a route that creates a new Interface
         """
-        #interface_id = request.args.get('id')
-        interface_name = request.args.get('name')
-        interface_widgets = request.args.get('widgets')
-        interface = Interface(interface_name, interface_widgets)
-        db.session.add(interface)
-        db.session.commit()
-        return jsonify(["Success", "Object, {} , created".format(interface_name)])
+        data = await request.get_json()
+        #print("data", data)
+        name = data['interface_name']
+        if not Interface.query.filter_by(name=name).first():
+            interface = add_interface(name=name, widgets=data['widgets'])
+            db.session.commit()
+            current_app.logger.info('Interface added: {0}'.format(interface.as_json()))
+            return interface.as_json(), OBJECT_CREATED
+        else:
+            current_app.logger.warning('Cannot create Interface {0}. Interface already exists.'.format(name))
+            return Problem.from_crud_resource(
+                OBJECT_EXISTS_ERROR,
+                'interface',
+                'create',
+                'Interface with name, {}, already exists'.format(name))
 
 

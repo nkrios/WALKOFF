@@ -3,15 +3,11 @@ import sys
 
 import nacl.secret
 import nacl.utils
-from sqlalchemy import JSON, Column, Integer, ForeignKey, String, orm, and_
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
 from uuid import uuid4
-
-import walkoff.config
+from walkoff.serverdb.interface_widget import Widget
+from walkoff.extensions import db
 from walkoff.appgateway.validator import convert_primitive_type
-from walkoff.executiondb import Execution_Base, ExecutionDatabase
+#from walkoff.executiondb import Execution_Base
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +16,7 @@ class UnknownDeviceField(Exception):
     pass
 
 
-class Interface(Execution_Base):
+class Interface(db.Model):
     """SqlAlchemy ORM class for Apps
 
     Attributes:
@@ -28,21 +24,22 @@ class Interface(Execution_Base):
         name (str): String Column which is the name of the interface
         widgets(obj): An array of Interface Widget(s) belonging to an Interface.
                       Supplied by the foreign key from Interface_widget
-    Args:
-        name (str): Name
     """
     __tablename__ = 'interface'
 
-    id = Column(Integer, primary_key=True, autoincrement=True, default=uuid4)
-    name = Column('name', String, nullable=False)
-    widgets = relationship('InterfaceWidget')
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, default=uuid4)
+    name = db.Column('name', db.String, nullable=False)
+    widgets = db.relationship('Widget', backref=db.backref('interface', lazy=True))
 
     def __init__(self, name, widgets=None):
-
         self.name = name
-        if widgets is not None:
-            for widget in widgets:
-                self.add_widget(widget)
+        for widget in widgets:
+            w = Widget(widget)
+            self.add_widget(w)
+
+    # def __repr__(self):
+    #     return "<Interface(id={}, name={}, widgets={}>"\
+    #             .format(self.id, self.name, self.widgets)
 
     def add_widget(self, widget):
         """Adds a widget to this Interface. If the name of the device to add to this app already exists, then
@@ -53,3 +50,18 @@ class Interface(Execution_Base):
         """
         if not any(widget.name == widget.name for widget in self.widgets):
             self.widgets.append(widget)
+
+    def as_json(self):
+        """Returns the dictionary representation of an Interface object.
+
+        Args:
+            None
+
+        Returns:
+            (out): The dictionary representation of an Interface object.
+        """
+        out = {"id": self.id,
+               "name": self.name,
+               "widgets": [widget.as_json() for widget in self.widgets]
+               }
+        return out

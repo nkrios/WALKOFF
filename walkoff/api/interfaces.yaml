@@ -4,20 +4,64 @@ components:
       in: query
       description: ID of the interface
       type: string
-      required: false
     interface_name:
       in: query
       description: Name of the interface
       type: string
       required: true
-    widgets:
+    interface_widgets:
       in: query
       description: the list of widgets and their components
       type: object
-      required: false
+  schemas:
+    interface:
+      type: object
+      properties:
+        name:
+          type: string
+          required: true
+        widgets:
+          type: array
+          items:
+            $ref: '#/components/schemas/widget'
+    widget:
+      type: object
+      properties:
+        x:
+          type: int
+          required: true
+        y:
+          type: int
+          required: true
+        cols:
+          type: int
+          required: int
+        rows:
+          type: int
+          required: true
+        title:
+          type: string
+          required: true
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/option'
+    option:
+      type: object
+      properties:
+        workflow:
+          type: string
+        execution:
+          type: string
+        action:
+          type: string
   responses:
-      create_interface:
-        type: string
-        description: A confirmation message on successful creation
-        items:
-          type: object
+    create_interface_201:
+      type: string
+      description: A confirmation message on successful creation
+      items:
+        type: object
+      content:
+        application/json:
+          schema:
+            type: array
