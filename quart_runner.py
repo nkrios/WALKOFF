@@ -17,6 +17,7 @@ from jinja2 import FileSystemLoader
 from walkoff.server.context import Context
 
 from walkoff.server.blueprints import auth
+from walkoff.server.blueprints import interfaces
 from walkoff.server.blueprints import root
 
 from walkoff.extensions import db, jwt
@@ -24,6 +25,7 @@ from walkoff.extensions import db, jwt
 
 def register_blueprints(app_):
     app_.register_blueprint(auth.blueprint)
+    app_.register_blueprint(interfaces.app)
     app_.register_blueprint(root.root_page)
     swaggerui_blueprint = get_swaggerui_blueprint("/api/docs", "/openapi.json")
     app_.register_blueprint(swaggerui_blueprint, url_prefix="/api/docs")

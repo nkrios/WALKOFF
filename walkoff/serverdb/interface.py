@@ -6,6 +6,7 @@ import nacl.utils
 from uuid import uuid4
 from walkoff.serverdb.interface_widget import Widget
 from walkoff.extensions import db
+from sqlalchemy_utils import UUIDType
 from walkoff.appgateway.validator import convert_primitive_type
 #from walkoff.executiondb import Execution_Base
 
@@ -27,8 +28,8 @@ class Interface(db.Model):
     """
     __tablename__ = 'interface'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, default=uuid4)
-    name = db.Column('name', db.String, nullable=False)
+    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
+    name = db.Column(db.String, nullable=False)
     widgets = db.relationship('Widget', backref=db.backref('interface', lazy=True))
 
     def __init__(self, name, widgets=None):

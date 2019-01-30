@@ -1,5 +1,6 @@
 import logging
 import sys
+import json
 
 import nacl.secret
 import nacl.utils
@@ -7,6 +8,8 @@ import nacl.utils
 import walkoff.config
 from walkoff.appgateway.validator import convert_primitive_type
 #from walkoff.executiondb import Execution_Base, ExecutionDatabase
+
+from sqlalchemy_utils import UUIDType
 from walkoff.extensions import db
 from uuid import uuid4
 logger = logging.getLogger(__name__)
@@ -35,17 +38,17 @@ class Widget(db.Model):
     """
     __tablename__ = 'interface_widget'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, default=uuid4)
-    title = db.Column('title', db.String, nullable=False)
-    x = db.Column('x', db.Integer, nullable=False)
-    y = db.Column('y', db.Integer, nullable=False)
-    cols = db.Column('cols', db.Integer, nullable=False)
-    rows = db.Column('rows', db.Integer, nullable=False)
+    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4)
+    title = db.Column(db.String, nullable=False)
+    x = db.Column(db.Integer, nullable=False)
+    y = db.Column(db.Integer, nullable=False)
+    cols = db.Column(db.Integer, nullable=False)
+    rows = db.Column(db.Integer, nullable=False)
 
+    options = db.Column(db.String, nullable=True)
     # This json string is arbitrary and will not be the same format for each widget
-    options = db.Column('options', db.String, nullable=True)
 
-    interface_id = db.Column(db.Integer, db.ForeignKey('interface.id'))
+    interface_id = db.Column(UUIDType(binary=False), db.ForeignKey('interface.id'))
 
     # def __init__(self, title, x, y, cols, rows, options):
     #     self.title = title
@@ -61,7 +64,7 @@ class Widget(db.Model):
         self.y = widget['y']
         self.cols = widget['cols']
         self.rows = widget['rows']
-        self.options = widget['options']
+        self.options = json.dumps(widget['options'])
 
     def as_json(self):
         """Returns the dictionary representation of an Interface_Widget object.
@@ -73,13 +76,12 @@ class Widget(db.Model):
             (out): The dictionary representation of an Interface_Widget object.
         """
         out = {"id": self.id,
-                "title": self.tlte,
-                "type": self.type,
-                "x": self.x,
-                "y": self.y,
-                "cols": self.cols,
-                "rows": self.rows,
-                "options": self.options,
-                "interface_id": self.interface_id
+               "title": self.title,
+               "x": self.x,
+               "y": self.y,
+               "cols": self.cols,
+               "rows": self.rows,
+               "options": self.options,
+               "interface_id": self.interface_id
                }
         return out

@@ -13,6 +13,8 @@ from walkoff.server.returncodes import *
 from quart import request, current_app
 from walkoff.server.problem import Problem
 
+import json
+
 from ruamel.yaml import YAML
 
 app = PintBlueprint(__name__, "interfaces", base_model_schema=load_yaml(config.Config.API_PATH, 'interfaces.yaml'))
@@ -82,7 +84,7 @@ class InterfacesEndpoint(Resource):
             interface = add_interface(name=name, widgets=data['widgets'])
             db.session.commit()
             current_app.logger.info('Interface added: {0}'.format(interface.as_json()))
-            return interface.as_json(), OBJECT_CREATED
+            return jsonify(interface.as_json()), OBJECT_CREATED
         else:
             current_app.logger.warning('Cannot create Interface {0}. Interface already exists.'.format(name))
             return Problem.from_crud_resource(
