@@ -1,10 +1,14 @@
 import logging
 from weakref import WeakSet
+import json
 
 import walkoff.config
 from interfaces.util import convert_to_iterable
 from walkoff.appgateway.apiutil import UnknownApp, UnknownAppAction
 from walkoff.events import EventType
+
+from redis import Redis
+
 
 _logger = logging.getLogger(__name__)
 
@@ -252,7 +256,7 @@ class AppEventDispatcher(object):
             UnknownAppAction: If the action is not found in the give app's actions
         """
         try:
-            available_actions = set(walkoff.config.app_apis[app]['actions'].keys())
+            available_actions = set(json.loads(redis_cache.hget("app-apis", app))['actions'].keys())
             if actions == 'all':
                 return available_actions
             actions = set(convert_to_iterable(actions))

@@ -1,6 +1,8 @@
 from copy import deepcopy
+import json
 
 from flask_jwt_extended import jwt_required
+from redis import Redis
 
 import walkoff.config
 from walkoff import helpers
@@ -8,13 +10,17 @@ from walkoff.appgateway import is_app_action_bound
 from walkoff.security import permissions_accepted_for_resources, ResourcePermissions
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
+from collections import OrderedDict
+from itertools import islice
+
+redis_cache = Redis(host=walkoff.config.Config.CACHE["host"], port=walkoff.config.Config.CACHE["port"])
 
 
 def read_all_apps():
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
     def __func():
-        apps = helpers.list_apps(walkoff.config.Config.APPS_PATH)
+        apps = redis_cache.hgetall("app-apis").keys()
         return sorted(apps, key=(lambda app_name: app_name.lower())), SUCCESS
 
     return __func()
@@ -113,7 +119,7 @@ def read_all_app_apis(field_name=None):
             return Problem(BAD_REQUEST, 'Could not read app api.', '{} is not a valid field name.'.format(field_name))
 
         ret = []
-        for app_name, app_api in walkoff.config.app_apis.items():
+        for app_name, app_api in redis_cache.hgetall("app-apis").items():
             ret.append(format_full_app_api(app_api, app_name))
         if field_name is not None:
             default = [] if field_name not in ('info', 'external_docs') else {}
@@ -131,7 +137,7 @@ def read_app_api(app_name):
     @jwt_required
     @permissions_accepted_for_resources(ResourcePermissions('app_apis', ['read']))
     def __func():
-        api = walkoff.config.app_apis.get(app_name, None)
+        api = json.loads(redis_cache.hget("app-apis", app_name))
         if api is not None:
             return format_full_app_api(api, app_name), SUCCESS
         else:
@@ -149,7 +155,7 @@ def read_app_api_field(app_name, field_name):
                               'externalDocs']:
             return Problem(BAD_REQUEST, 'Could not read app api.', '{} is not a valid field name.'.format(field_name))
 
-        api = walkoff.config.app_apis.get(app_name, None)
+        api = json.loads(redis_cache.hget("app-apis", app_name))
         if api is not None:
             return format_full_app_api(api, app_name)[field_name], SUCCESS
         else:

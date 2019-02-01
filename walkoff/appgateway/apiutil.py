@@ -1,4 +1,9 @@
+import json
+from redis import Redis
 import walkoff.config
+
+
+redis_cache = Redis(host=walkoff.config.Config.CACHE["host"], port=walkoff.config.Config.CACHE["port"])
 
 
 def get_app_action_api(app, action):
@@ -13,7 +18,9 @@ def get_app_action_api(app, action):
         (tuple(str, dict)) The name of the function to execute and its parameters
     """
     try:
-        app_api = walkoff.config.app_apis[app]
+        app_api = json.loads(redis_cache.hget("app-apis", app))
+        if not app_api:
+            raise KeyError
     except KeyError:
         raise UnknownApp(app)
     else:
@@ -37,7 +44,9 @@ def get_app_action_default_return(app, action):
         (str): The name of the default return code or Success if none defined
     """
     try:
-        app_api = walkoff.config.app_apis[app]
+        app_api = json.loads(redis_cache.hget("app-apis", app))
+        if not app_api:
+            raise KeyError
     except KeyError:
         raise UnknownApp(app)
     else:
@@ -66,7 +75,9 @@ def get_app_action_return_is_failure(app, action, status):
     if status == 'UnhandledException':
         return True
     try:
-        app_api = walkoff.config.app_apis[app]
+        app_api = json.loads(redis_cache.hget("app-apis", app))
+        if not app_api:
+            raise KeyError
     except KeyError:
         raise UnknownApp(app)
     else:
@@ -95,7 +106,9 @@ def get_app_device_api(app, device_type):
         UnknownDevice: If a device type is passed in that does not correspond to the App
     """
     try:
-        app_api = walkoff.config.app_apis[app]
+        app_api = json.loads(redis_cache.hget("app-apis", app))
+        if not app_api:
+            raise KeyError
     except KeyError:
         raise UnknownApp(app)
     else:
@@ -137,7 +150,9 @@ def get_condition_api(app, condition):
         UnknownCondition: If no Condition exists for that App
     """
     try:
-        app_api = walkoff.config.app_apis[app]
+        app_api = json.loads(redis_cache.hget("app-apis", app))
+        if not app_api:
+            raise KeyError
     except KeyError:
         raise UnknownApp(app)
     else:
@@ -164,7 +179,9 @@ def get_transform_api(app, transform):
             UnknownTransform: If no Transform exists for that App
         """
     try:
-        app_api = walkoff.config.app_apis[app]
+        app_api = json.loads(redis_cache.hget("app-apis", app))
+        if not app_api:
+            raise KeyError
     except KeyError:
         raise UnknownApp(app)
     else:

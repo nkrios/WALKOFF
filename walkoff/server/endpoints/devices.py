@@ -10,22 +10,28 @@ from walkoff.security import permissions_accepted_for_resources, ResourcePermiss
 from walkoff.server.decorators import with_resource_factory
 from walkoff.server.problem import Problem
 from walkoff.server.returncodes import *
+from walkoff.config import Config
+from redis import Redis
+from collections import OrderedDict
+from itertools import islice
 
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
 
+redis_cache = Redis(host=Config.CACHE["host"], port=Config.CACHE["port"])
+
 with_device = with_resource_factory(
     'device',
-    lambda device_id: current_app.running_context.execution_db.session.query(Device).filter(
-        Device.id == device_id).first())
+    lambda device_id: redis_cache.hget("globals", device_id))
 
 
 def get_device_json_with_app_name(device):
-    device_json = device.as_json()
-    app = current_app.running_context.execution_db.session.query(App).filter(App.id == device.app_id).first()
-    device_json['app_name'] = app.name if app is not None else ''
+    device_json = json.loads(device)
+    # app = redis_cache.hget("app-apis", device_json
+    # app = current_app.running_context.execution_db.session.query(App).filter(App.id == device_json['app_id']).first()
+    # device_json['app_name'] = app.name if app is not None else ''
     return device_json
 
 
@@ -34,9 +40,11 @@ def read_all_devices():
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['read']))
     def __func():
         page = request.args.get('page', 1, type=int)
-        return [get_device_json_with_app_name(device) for device in
-                current_app.running_context.execution_db.session.query(Device).limit(
-                    current_app.config['ITEMS_PER_PAGE']).offset((page-1) * current_app.config['ITEMS_PER_PAGE'])], SUCCESS
+        devices = OrderedDict(sorted(redis_cache.hgetall("globals").items(), key=lambda kv: kv[0]))
+        start = (page-1) * current_app.config['ITEMS_PER_PAGE']
+        stop = start + current_app.config['ITEMS_PER_PAGE']
+
+        return [get_device_json_with_app_name(device[1]) for device in islice(devices.items(), start, stop)], SUCCESS
 
     return __func()
 
@@ -62,9 +70,8 @@ def delete_device(device_id):
     @permissions_accepted_for_resources(ResourcePermissions('devices', ['delete']))
     @with_device('delete', device_id)
     def __func(device):
-        current_app.running_context.execution_db.session.delete(device)
+        redis_cache.hdel("globals", device_id)
         current_app.logger.info('Device removed {0}'.format(device_id))
-        current_app.running_context.execution_db.session.commit()
         return None, NO_CONTENT
 
     return __func()
@@ -92,8 +99,7 @@ def create_device():
             add_device_json = json.loads(f.read().decode('utf-8'))
         else:
             add_device_json = request.get_json()
-        if current_app.running_context.execution_db.session.query(Device).filter(
-                Device.name == add_device_json['name']).first() is not None:
+        if redis_cache.hexists("globals", add_device_json['app_name']):
             current_app.logger.error('Could not create device {0}. '
                                      'Device already exists.'.format(add_device_json['name']))
             return Problem.from_crud_resource(
@@ -105,30 +111,32 @@ def create_device():
         fields = {field['name']: field['value'] for field in add_device_json['fields']}
         app = add_device_json['app_name']
         device_type = add_device_json['type']
-        try:
-            device_api = get_app_device_api(app, device_type)
-            device_fields_api = device_api['fields']
-            validate_device_fields(device_fields_api, fields, device_type, app)
-        except (UnknownApp, UnknownDevice, InvalidArgument) as e:
-            return __crud_device_error_handler('create', e, app, device_type)
-        else:
-            fields = add_device_json['fields']
-            add_configuration_keys_to_device_json(fields, device_fields_api)
-            app = current_app.running_context.execution_db.session.query(App).filter(App.name == app).first()
-            if app is None:
-                current_app.logger.error('SEVERE: App defined in api does not have corresponding entry in database. '
-                                         'Cannot add device')
-                return Problem.from_crud_resource(
-                    INVALID_INPUT_ERROR,
-                    'device',
-                    'create',
-                    'App {} does not exist.'.format(add_device_json['app_name']))
-            device = Device.from_json(add_device_json)
-            app.add_device(device)
-            current_app.running_context.execution_db.session.add(device)
-            current_app.running_context.execution_db.session.commit()
-            device_json = get_device_json_with_app_name(device)
-            return device_json, OBJECT_CREATED
+        # try:
+        device_api = get_app_device_api(app, device_type)
+        device_fields_api = device_api['fields']
+        #     validate_device_fields(device_fields_api, fields, device_type, app)
+        # except (UnknownApp, UnknownDevice, InvalidArgument) as e:
+        #     return __crud_device_error_handler('create', e, app, device_type)
+        # else:
+        fields = add_device_json['fields']
+        add_configuration_keys_to_device_json(fields, device_fields_api)
+        # app = current_app.running_context.execution_db.session.query(App).filter(App.name == app).first()
+        app = redis_cache.hget("app-apis", app)
+        if app is None:
+            current_app.logger.error('SEVERE: App defined in api does not have corresponding entry in database. '
+                                     'Cannot add device')
+            return Problem.from_crud_resource(
+                INVALID_INPUT_ERROR,
+                'device',
+                'create',
+                'App {} does not exist.'.format(add_device_json['app_name']))
+        redis_cache.hset("globals", add_device_json["app_name"], add_device_json)
+        # device = Device.from_json(add_device_json)
+        # app.add_device(device)
+        # current_app.running_context.execution_db.session.add(device)
+        # current_app.running_context.execution_db.session.commit()
+        device_json = get_device_json_with_app_name(device)
+        return device_json, OBJECT_CREATED
 
     return __func()
 
