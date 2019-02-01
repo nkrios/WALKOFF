@@ -193,7 +193,7 @@ class MultiprocessedExecutor(object):
         workflow_schema = WorkflowSchema()
         workflow = workflow_schema.dump(workflow)
         message = {"workflow": workflow, "workflow_id": workflow_id, "execution_id": workflow_execution_id}
-        self.cache.lpush("request_queue", message)  # self.__box.encrypt(message))
+        self.cache.lpush("workflow-queue", message)  # self.__box.encrypt(message))
 
     def pause_workflow(self, execution_id, user=None):
         """Pauses a workflow that is currently executing.

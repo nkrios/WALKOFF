@@ -56,13 +56,15 @@ class ZmqWorkflowResultsReceiver(object):
             if self.thread_exit:
                 break
             # message_bytes = self.results_sock.recv(zmq.NOBLOCK)
-            workflow_results_message = self.workflow_results_pubsub.get_message()  # ToDo: ignore sub/unsub?
+            workflow_results_message = self.workflow_results_pubsub.get_message(ignore_subscribe_messages=True)  # ToDo: ignore sub/unsub?
             if workflow_results_message:
+                print(workflow_results_message)
                 with self.current_app.app_context():
                     self._send_callback(workflow_results_message)
 
-            action_results_message = self.action_results_pubsub.get_message()
+            action_results_message = self.action_results_pubsub.get_message(ignore_subscribe_messages=True)
             if action_results_message:
+                print(action_results_message)
                 with self.current_app.app_context():
                     self._send_callback(action_results_message)
 

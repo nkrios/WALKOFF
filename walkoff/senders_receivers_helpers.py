@@ -1,13 +1,13 @@
 import logging
 
 import walkoff.config
-from walkoff.multiprocessedexecutor.kafka_receivers import KafkaWorkflowResultsReceiver
-from walkoff.multiprocessedexecutor.kafka_senders import KafkaWorkflowResultsSender, KafkaWorkflowCommunicationSender
+# from walkoff.multiprocessedexecutor.kafka_receivers import KafkaWorkflowResultsReceiver
+# from walkoff.multiprocessedexecutor.kafka_senders import KafkaWorkflowResultsSender, KafkaWorkflowCommunicationSender
 from walkoff.multiprocessedexecutor.protoconverter import ProtobufWorkflowCommunicationConverter, \
     ProtobufWorkflowResultsConverter
 from walkoff.multiprocessedexecutor.zmq_receivers import ZmqWorkflowResultsReceiver
 from walkoff.multiprocessedexecutor.zmq_senders import ZmqWorkflowResultsSender, ZmqWorkflowCommunicationSender
-from walkoff.worker.kafka_workflow_receivers import KafkaWorkflowCommunicationReceiver
+# from walkoff.worker.kafka_workflow_receivers import KafkaWorkflowCommunicationReceiver
 from walkoff.worker.zmq_workflow_receivers import ZmqWorkflowCommunicationReceiver
 
 logger = logging.getLogger(__name__)

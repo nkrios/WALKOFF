@@ -28,7 +28,6 @@ pyopenssl
 gitpython
 dill
 redis >= 3.0
-confluent-kafka
 fluent-logger
 msgpack
 prometheus_client
