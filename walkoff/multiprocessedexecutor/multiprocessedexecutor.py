@@ -18,6 +18,7 @@ from walkoff.executiondb import WorkflowStatusEnum
 from walkoff.executiondb.saved_workflow import SavedWorkflow
 from walkoff.executiondb.workflow import Workflow
 from walkoff.executiondb.workflowresults import WorkflowStatus
+from walkoff.executiondb.schemas import PlaybookSchema, WorkflowSchema
 from walkoff.multiprocessedexecutor.threadauthenticator import ThreadAuthenticator
 from walkoff.senders_receivers_helpers import make_results_receiver, make_results_sender, make_communication_sender
 from walkoff.worker.action_exec_strategy import make_execution_strategy
@@ -185,10 +186,14 @@ class MultiprocessedExecutor(object):
 
     def __add_workflow_to_queue(self, workflow_id, workflow_execution_id, start=None, start_arguments=None,
                                 resume=False, environment_variables=None, user=None):
-        message = self.results_sender.create_workflow_request_message(workflow_id, workflow_execution_id, start,
-                                                                      start_arguments, resume, environment_variables,
-                                                                      user)
-        self.cache.lpush("request_queue", self.__box.encrypt(message))
+        # message = self.results_sender.create_workflow_request_message(workflow_id, workflow_execution_id, start,
+        #                                                               start_arguments, resume, environment_variables,
+        #                                                               user)
+        workflow = current_app.running_context.execution_db.session.query(Workflow).filter_by(id=workflow_id).first()
+        workflow_schema = WorkflowSchema()
+        workflow = workflow_schema.dump(workflow)
+        message = {"workflow": workflow, "workflow_id": workflow_id, "execution_id": workflow_execution_id}
+        self.cache.lpush("request_queue", message)  # self.__box.encrypt(message))
 
     def pause_workflow(self, execution_id, user=None):
         """Pauses a workflow that is currently executing.
