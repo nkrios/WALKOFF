@@ -46,12 +46,6 @@ class Default(Resource):
         # return render_template("index.html")
 
 
-@root_page.route('/interfaces/<interface_name>')
-class AppPage(Resource):
-    async def get(self, interface_name):
-        return await render_template("index.html")
-
-
 @root_page.route('/login')
 class LoginPage(Resource):
     async def get(self):

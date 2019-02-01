@@ -65,3 +65,21 @@ components:
         application/json:
           schema:
             type: array
+    get_all_interfaces_200:
+      type: string
+      description: List of all interfaces
+      items:
+        type: object
+      content:
+        application/json:
+          schema:
+            type: array
+    get_single_interface_200:
+      type: string
+      descripion: An interface
+      items:
+        type: object
+      content:
+        application/json:
+          schema:
+            type: array

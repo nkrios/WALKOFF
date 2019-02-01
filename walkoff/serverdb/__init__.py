@@ -134,8 +134,6 @@ def remove_user(username):
 
 
 def add_interface(name, widgets=None):
-    #print("name: {}, widgets: {}".format(name, widgets))
-
     if Interface.query.filter_by(name=name).first() is None:
         i = Interface(name, widgets=widgets)
         db.session.add(i)

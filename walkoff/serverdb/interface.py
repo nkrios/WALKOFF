@@ -38,19 +38,15 @@ class Interface(db.Model):
             w = Widget(widget)
             self.add_widget(w)
 
-    # def __repr__(self):
-    #     return "<Interface(id={}, name={}, widgets={}>"\
-    #             .format(self.id, self.name, self.widgets)
-
-    def add_widget(self, widget):
+    def add_widget(self, incoming_widget):
         """Adds a widget to this Interface. If the name of the device to add to this app already exists, then
             no device will be added
 
         Args:
             widget (widget): The widget to add
         """
-        if not any(widget.name == widget.name for widget in self.widgets):
-            self.widgets.append(widget)
+        if not any(incoming_widget.title == widget.title for widget in self.widgets):
+            self.widgets.append(incoming_widget)
 
     def as_json(self):
         """Returns the dictionary representation of an Interface object.
