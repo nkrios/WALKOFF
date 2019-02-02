@@ -27,7 +27,11 @@ class ZmqWorkflowResultsReceiver(object):
         """
         import walkoff.server.workflowresults  # Need this import
 
-        self.redis_cache = Redis(host=walkoff.config.Config.CACHE["host"], port=walkoff.config.Config.CACHE["port"])
+        config = walkoff.config.Config()
+        config.load_env_vars()
+
+        self.redis_cache = Redis(host=config.CACHE["host"], port=config.CACHE["port"])
+
         self.workflow_results_pubsub = self.redis_cache.pubsub()
         self.workflow_results_pubsub.subscribe("workflow-results")
         self.action_results_pubsub = self.redis_cache.pubsub()

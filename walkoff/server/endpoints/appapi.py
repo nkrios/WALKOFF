@@ -13,8 +13,10 @@ from walkoff.server.returncodes import *
 from collections import OrderedDict
 from itertools import islice
 
-redis_cache = Redis(host=walkoff.config.Config.CACHE["host"], port=walkoff.config.Config.CACHE["port"])
+config = walkoff.config.Config()
+config.load_env_vars()
 
+redis_cache = Redis(host=config.CACHE["host"], port=config.CACHE["port"])
 
 def read_all_apps():
     @jwt_required
@@ -58,8 +60,8 @@ def format_app_action_api(api, app_name, action_type):
     ret = deepcopy(api)
     if 'returns' in api:
         ret['returns'] = format_returns(ret['returns'], 'event' in api)
-    if action_type in ('conditions', 'transforms') or not is_app_action_bound(app_name, api['run']):
-        ret['global'] = True
+    # if action_type in ('conditions', 'transforms') or not is_app_action_bound(app_name, api['run']):
+    #     ret['global'] = True
     if 'parameters' in api:
         ret['parameters'] = [extract_schema(param_api) for param_api in ret['parameters']]
     else:
@@ -120,7 +122,7 @@ def read_all_app_apis(field_name=None):
 
         ret = []
         for app_name, app_api in redis_cache.hgetall("app-apis").items():
-            ret.append(format_full_app_api(app_api, app_name))
+            ret.append(format_full_app_api(json.loads(app_api), app_name.decode()))
         if field_name is not None:
             default = [] if field_name not in ('info', 'external_docs') else {}
             ret = [{'name': api['name'], field_name: api.get(field_name, default)} for api in ret]

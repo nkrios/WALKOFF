@@ -3,7 +3,10 @@ from redis import Redis
 import walkoff.config
 
 
-redis_cache = Redis(host=walkoff.config.Config.CACHE["host"], port=walkoff.config.Config.CACHE["port"])
+config = walkoff.config.Config()
+config.load_env_vars()
+
+redis_cache = Redis(host=config.CACHE["host"], port=config.CACHE["port"])
 
 
 def get_app_action_api(app, action):

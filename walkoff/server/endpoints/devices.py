@@ -1,6 +1,6 @@
 import json
 
-from flask import current_app, request, send_file
+from flask import current_app, request, send_file, jsonify
 from flask_jwt_extended import jwt_required
 
 from walkoff.appgateway.apiutil import get_app_device_api, UnknownApp, UnknownDevice, InvalidArgument
@@ -20,7 +20,10 @@ try:
 except ImportError:
     from io import StringIO
 
-redis_cache = Redis(host=Config.CACHE["host"], port=Config.CACHE["port"])
+config = Config()
+config.load_env_vars()
+
+redis_cache = Redis(host=config.CACHE["host"], port=config.CACHE["port"])
 
 with_device = with_resource_factory(
     'device',
@@ -130,13 +133,13 @@ def create_device():
                 'device',
                 'create',
                 'App {} does not exist.'.format(add_device_json['app_name']))
-        redis_cache.hset("globals", add_device_json["app_name"], add_device_json)
+        redis_cache.hset("globals", add_device_json["app_name"], json.dumps(add_device_json))
         # device = Device.from_json(add_device_json)
         # app.add_device(device)
         # current_app.running_context.execution_db.session.add(device)
         # current_app.running_context.execution_db.session.commit()
-        device_json = get_device_json_with_app_name(device)
-        return device_json, OBJECT_CREATED
+        # device_json = get_device_json_with_app_name(device)
+        return jsonify(add_device_json), OBJECT_CREATED
 
     return __func()
 

@@ -1,6 +1,7 @@
 import logging
 import threading
 import uuid
+import json
 
 import gevent
 import nacl.bindings
@@ -192,8 +193,8 @@ class MultiprocessedExecutor(object):
         workflow = current_app.running_context.execution_db.session.query(Workflow).filter_by(id=workflow_id).first()
         workflow_schema = WorkflowSchema()
         workflow = workflow_schema.dump(workflow)
-        message = {"workflow": workflow, "workflow_id": workflow_id, "execution_id": workflow_execution_id}
-        self.cache.lpush("workflow-queue", message)  # self.__box.encrypt(message))
+        message = {"workflow": workflow, "workflow_id": str(workflow_id), "execution_id": str(workflow_execution_id)}
+        self.cache.lpush("workflow-queue", json.dumps(message))  # self.__box.encrypt(message))
 
     def pause_workflow(self, execution_id, user=None):
         """Pauses a workflow that is currently executing.

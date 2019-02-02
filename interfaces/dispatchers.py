@@ -9,8 +9,10 @@ from walkoff.events import EventType
 
 from redis import Redis
 
-redis_cache = Redis(host=walkoff.config.Config.CACHE["host"], port=walkoff.config.Config.CACHE["port"])
+config = walkoff.config.Config()
+config.load_env_vars()
 
+redis_cache = Redis(host=config.CACHE["host"], port=config.CACHE["port"])
 
 _logger = logging.getLogger(__name__)
 
