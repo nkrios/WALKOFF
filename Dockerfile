@@ -11,6 +11,6 @@ RUN apk --no-cache add --update g++ postgresql-dev
 COPY ./ /app
 WORKDIR /app
 
-EXPOSE 8080
+RUN python scripts/generate_certificates.py
 
 CMD python walkoff.py -a

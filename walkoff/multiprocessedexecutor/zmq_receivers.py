@@ -14,8 +14,6 @@ from walkoff.server import context
 logger = logging.getLogger(__name__)
 
 
-
-
 class ZmqWorkflowResultsReceiver(object):
     def __init__(self, message_converter=ProtobufWorkflowResultsConverter, current_app=None):
         """Initialize a Receiver object, which will receive callbacks from the ExecutionElements.
@@ -68,9 +66,8 @@ class ZmqWorkflowResultsReceiver(object):
 
             action_results_message = self.action_results_pubsub.get_message(ignore_subscribe_messages=True)
             if action_results_message:
-                print(action_results_message)
                 with self.current_app.app_context():
-                    self._send_callback(action_results_message)
+                    self._send_callback(action_results_message.get("data", ''))
 
             gevent.sleep(0.1)
 

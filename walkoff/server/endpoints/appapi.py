@@ -62,6 +62,7 @@ def format_app_action_api(api, app_name, action_type):
         ret['returns'] = format_returns(ret['returns'], 'event' in api)
     # if action_type in ('conditions', 'transforms') or not is_app_action_bound(app_name, api['run']):
     #     ret['global'] = True
+    ret["global"] = True
     if 'parameters' in api:
         ret['parameters'] = [extract_schema(param_api) for param_api in ret['parameters']]
     else:
@@ -122,7 +123,7 @@ def read_all_app_apis(field_name=None):
 
         ret = []
         for app_name, app_api in redis_cache.hgetall("app-apis").items():
-            ret.append(format_full_app_api(json.loads(app_api), app_name.decode()))
+            ret.append(format_full_app_api(json.loads(app_api), app_name))
         if field_name is not None:
             default = [] if field_name not in ('info', 'external_docs') else {}
             ret = [{'name': api['name'], field_name: api.get(field_name, default)} for api in ret]
