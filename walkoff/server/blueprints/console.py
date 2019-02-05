@@ -17,8 +17,7 @@ from walkoff.server.returncodes import BAD_REQUEST
 from walkoff.sse import FilteredSseStream, StreamableBlueprint
 
 console_stream = FilteredSseStream('console_results')
-console_page = StreamableBlueprint('console_page', __name__, streams=(console_stream,),
-                                   base_model_schema=load_yaml(walkoff.config.Config.API_PATH, "console.yaml"))
+console_page = StreamableBlueprint('console_page', __name__, streams=(console_stream,))
 
 
 def format_console_data(sender, data):

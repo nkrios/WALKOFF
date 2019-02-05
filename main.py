@@ -17,7 +17,6 @@ from jinja2 import FileSystemLoader
 from walkoff.server.context import Context
 
 from walkoff.server.blueprints import root
-from walkoff.server.blueprints import auth
 from walkoff.server.blueprints import interfaces
 
 from walkoff.extensions import db, jwt

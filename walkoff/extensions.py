@@ -1,4 +1,4 @@
-import quart.flask_patch
+
 
 import flask_sqlalchemy
 from sqlalchemy import MetaData

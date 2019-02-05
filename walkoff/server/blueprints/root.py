@@ -1,5 +1,3 @@
-from quart import flask_patch
-
 import logging
 import os
 
