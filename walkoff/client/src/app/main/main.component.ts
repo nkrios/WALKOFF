@@ -48,9 +48,9 @@ export class MainComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 
 		this.currentUser = this.authService.getAndDecodeAccessToken().user_claims.username;
-		this.getInterfaceNames();
-		this.getInitialNotifications();
-		this.getNotificationsSSE();
+		// this.getInterfaceNames();
+		// this.getInitialNotifications();
+		// this.getNotificationsSSE();
 	}
 
 	/**
