@@ -26,7 +26,7 @@ import { DevicesComponent } from './devices/devices.component';
 import { MessagesComponent } from './messages/messages.component';
 import { MetricsComponent } from './metrics/metrics.component';
 import { SettingsComponent } from './settings/settings.component';
-import { InterfacesComponent } from './interfaces/interfaces.component';
+import { DashboardsComponent } from './dashboards/dashboards.component';
 import { ExecutionComponent } from './execution/execution.component';
 
 import { SchedulerModalComponent } from './scheduler/scheduler.modal.component';
@@ -46,8 +46,8 @@ import { MessagesModalComponent } from './messages/messages.modal.component';
 
 import { KeysPipe } from './pipes/keys.pipe';
 import { UtilitiesService } from './utilities.service';
-import { ManageInterfacesComponent } from './interfaces/manage.interfaces.component';
-import { WidgetModalComponent } from './interfaces/widget.modal.component';
+import { ManageDashboardsComponent } from './dashboards/manage.dashboards.component';
+import { WidgetModalComponent } from './dashboards/widget.modal.component';
 
 @NgModule({
 	imports: [
@@ -83,7 +83,7 @@ import { WidgetModalComponent } from './interfaces/widget.modal.component';
 		MessagesComponent,
 		MetricsComponent,
 		SettingsComponent,
-		InterfacesComponent,
+		DashboardsComponent,
 		ExecutionComponent,
 		//Modals
 		SchedulerModalComponent,
@@ -102,7 +102,7 @@ import { WidgetModalComponent } from './interfaces/widget.modal.component';
 		SettingsRolesComponent,
 		// Pipes
 		KeysPipe,
-		ManageInterfacesComponent,
+		ManageDashboardsComponent,
 		WidgetModalComponent,
 	],
 	providers: [

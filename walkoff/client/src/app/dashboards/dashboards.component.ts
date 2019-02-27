@@ -7,26 +7,26 @@ import * as html2canvas from 'html2canvas';
 
 import { AuthService } from '../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
-import { InterfaceService } from './interface.service';
+import { DashboardService } from './dashboard.service';
 import { GridsterConfig, GridType, CompactType } from 'angular-gridster2';
-import { Interface } from '../models/interface/interface';
-import { InterfaceWidget } from '../models/interface/interfaceWidget';
+import { Dashboard } from '../models/dashboard/dashboard';
+import { DashboardWidget } from '../models/dashboard/dashboardWidget';
 
 @Component({
-	selector: 'interfaces-component',
-	templateUrl: './interfaces.html',
-	styleUrls: ['./interfaces.scss'],
+	selector: 'dashboards-component',
+	templateUrl: './dashboards.html',
+	styleUrls: ['./dashboards.scss'],
 	encapsulation: ViewEncapsulation.None,
 	providers: [AuthService],
 })
-export class InterfacesComponent implements OnInit {
-	@ViewChild('interfacesMain') main: ElementRef;
-	interfaceName: string;
+export class DashboardsComponent implements OnInit {
+	@ViewChild('dashboardsMain') main: ElementRef;
+	dashboardName: string;
 	paramsSub: any;
 	activeIFrame: any;
 
 	options: GridsterConfig;
-	interface: Interface;
+	dashboard: Dashboard;
 
 	gridRows = 0;
 	gridColumns = 8;
@@ -36,22 +36,22 @@ export class InterfacesComponent implements OnInit {
 	
 	constructor(
 		private route: ActivatedRoute, private toastrService: ToastrService,
-		private http: HttpClient, private interfaceService: InterfaceService
+		private http: HttpClient, private dashboardService: DashboardService
 	) { }
 
 	/**
-	 * On init, get our interface name from the route params and grab the interface.
+	 * On init, get our dashboard name from the route params and grab the dashboard.
 	 */
 	ngOnInit() {
 		this.paramsSub = this.route.params.subscribe(params => {
-			this.interfaceName = params.interfaceName;
-			this.getInterface().then(() => this.initGrid());
+			this.dashboardName = params.dashboardName;
+			this.getDashboard().then(() => this.initGrid());
 		});
 	}
 
 	initGrid() {
 		this.gridRows = 0;
-		this.interface.widgets.forEach(item => {
+		this.dashboard.widgets.forEach(item => {
 			let widgetRows = item.y + item.rows;
 			if (widgetRows > this.gridRows) this.gridRows = widgetRows;
 		});
@@ -82,28 +82,28 @@ export class InterfacesComponent implements OnInit {
 	}
 
 	/**
-	 * Gets the interface by the name specified in the route params.
-	 * Loads the interface into an iframe currently.
+	 * Gets the dashboard by the name specified in the route params.
+	 * Loads the dashboard into an iframe currently.
 	 */
-	getInterface() {
-		this.clearInterface();
+	getDashboard() {
+		this.clearDashboard();
 
-		return this.interfaceService.getInterfaceWithMetadata(this.interfaceName).then(savedInterface => {
-			(savedInterface) ? this.interface = savedInterface : this.getCustomInterface();
+		return this.dashboardService.getDashboardWithMetadata(this.dashboardName).then(savedDashboard => {
+			(savedDashboard) ? this.dashboard = savedDashboard : this.getCustomDashboard();
 		})
 	}
 
-	clearInterface() {
-		this.interface = null;
+	clearDashboard() {
+		this.dashboard = null;
 		if (this.activeIFrame) {
 			this.main.nativeElement.removeChild(this.activeIFrame);
 			this.activeIFrame = null
 		}
 	}
 
-	getCustomInterface() {
+	getCustomDashboard() {
 		this.http
-			.get(`custominterfaces/${this.interfaceName}/`, { responseType: 'text' })
+			.get(`customdashboards/${this.dashboardName}/`, { responseType: 'text' })
 			.toPromise()
 			.then(data => {
 				this.activeIFrame = document.createElement('iframe');
@@ -112,7 +112,7 @@ export class InterfacesComponent implements OnInit {
 
 				this.main.nativeElement.appendChild(this.activeIFrame);
 			})
-			.catch(e => this.toastrService.error(`Error retrieving interface: ${e.message}`));
+			.catch(e => this.toastrService.error(`Error retrieving dashboard: ${e.message}`));
 	}
 
 	getGridWidth() {
@@ -125,7 +125,7 @@ export class InterfacesComponent implements OnInit {
 		return this.gridRows * Math.ceil(this.gridColSize * 3 / 4 + this.gridGutterSize) + this.gridGutterSize  + 'px';
 	}
 
-	getItemHeight(item: InterfaceWidget) {
+	getItemHeight(item: DashboardWidget) {
         return item.rows * Math.ceil(this.gridColSize * 3/4 + this.gridGutterSize) - 80;
     }
 
@@ -165,7 +165,7 @@ export class InterfacesComponent implements OnInit {
 		// 	// var img = canvas.toDataURL("image/png");
 		// 	// var doc = new jsPDF();
 		// 	// doc.addImage(img, 'JPEG', 5, 20);
-		// 	// doc.save(`${ this.interfaceName } - report.pdf`);
+		// 	// doc.save(`${ this.dashboardName } - report.pdf`);
 
 		// 	// var width = canvas.width;
 		// 	// var height = canvas.height;
@@ -179,7 +179,7 @@ export class InterfacesComponent implements OnInit {
 		// 	// doc.deletePage(1);
 		// 	// doc.addPage(millimeters.width, millimeters.height);
 		// 	// doc.addImage(imgData, 'PNG', 0, 0);
-		// 	// doc.save(`${ this.interfaceName } - report.pdf`);
+		// 	// doc.save(`${ this.dashboardName } - report.pdf`);
 
 		// 	//! MAKE YOUR PDF
 		// 	var pdf = new jsPDF('p', 'pt', 'letter');

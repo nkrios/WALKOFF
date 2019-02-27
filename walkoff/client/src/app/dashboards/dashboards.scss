@@ -1,4 +1,4 @@
-#main.customInterface {
+#main.customDashboard {
 	position: absolute;
 	top: 50px;
 	left: 0;
@@ -7,7 +7,7 @@
 	overflow: hidden;
 }
 
-#main.customInterface iframe {
+#main.customDashboard iframe {
 	position: absolute;
 	border: none;
 	top:0;
@@ -16,7 +16,7 @@
 	height: 100%;
 }
 
-#main.interfacesMain {
+#main.dashboardsMain {
 	padding: 10px 15px;
 }
 
