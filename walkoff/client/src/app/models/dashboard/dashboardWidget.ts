@@ -1,6 +1,6 @@
 import { Exclude } from 'class-transformer';
 
-export abstract class InterfaceWidget {
+export abstract class DashboardWidget {
     type = 'bar';
 
     options: any = {};
@@ -21,7 +21,7 @@ export abstract class InterfaceWidget {
     }
 }
 
-export abstract class ChartWidget extends InterfaceWidget {
+export abstract class ChartWidget extends DashboardWidget {
     chartLabels: string[];
     chartData: any[];
     chartOptions: any = {
@@ -79,7 +79,7 @@ export class LineChartWidget  extends ChartWidget {
     ];
 }
 
-export class TableWidget extends InterfaceWidget {
+export class TableWidget extends DashboardWidget {
     type = 'table';
     
     setMetadata(results: any) {
@@ -92,10 +92,10 @@ export class TableWidget extends InterfaceWidget {
     }
 }
 
-export class TextWidget  extends InterfaceWidget {
+export class TextWidget  extends DashboardWidget {
     type = 'text';
 }
 
-export class KibanaWidget  extends InterfaceWidget {
+export class KibanaWidget  extends DashboardWidget {
     type = 'kibana';
 }

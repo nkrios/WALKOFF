@@ -79,7 +79,7 @@
         <div class="col-md-2 graphEditorColumn">
             <div class="panel-group" id="accordion" #accordion [hidden]="!loadedWorkflow">
                 <div class="card my-1">
-                    <input class="form-control" placeholder="Filter Actions..." [ngModel]="actionFilter" [formControl]="actionFilterControl" />
+                    <input class="form-control" placeholder="Filter Actions..." [formControl]="actionFilterControl" />
                 </div>
                 <div *ngFor="let app of getAppsWithActions()" class="card card-default my-1">
                     <div class="card-heading playbook-heading collapsed" data-toggle="collapse" [attr.data-target]="'#actionsCollapse' + removeWhitespace(app.name)"

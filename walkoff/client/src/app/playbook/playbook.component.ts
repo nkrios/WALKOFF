@@ -163,9 +163,8 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 		/**
 		 * Filter app list by application and action names
 		 */
-		this.actionFilterControl.valueChanges.debounceTime(250).distinctUntilChanged().subscribe(query => {
-			query = query.trim();
-			this.actionFilter = query;
+		this.actionFilterControl.valueChanges.debounceTime(100).distinctUntilChanged().subscribe(query => {
+			this.actionFilter = query.trim();
 			setTimeout(() => {
 				($('.action-panel') as any)
 					.addClass('no-transition')

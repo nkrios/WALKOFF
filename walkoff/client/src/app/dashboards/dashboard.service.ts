@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { plainToClass, classToPlain, serialize, deserializeArray } from 'class-transformer';
 import { UtilitiesService } from '../utilities.service';
-import { Interface } from '../models/interface/interface';
+import { Dashboard } from '../models/dashboard/dashboard';
 import { ExecutionService } from '../execution/execution.service';
-import { InterfaceWidget } from '../models/interface/interfaceWidget';
+import { DashboardWidget } from '../models/dashboard/dashboardWidget';
 import { WorkflowStatus } from '../models/execution/workflowStatus';
 
 import * as csv from 'csvtojson';
@@ -11,40 +11,40 @@ import * as csv from 'csvtojson';
 @Injectable({
     providedIn: 'root'
 })
-export class InterfaceService {
+export class DashboardService {
 
     constructor(private utils: UtilitiesService, private executionService: ExecutionService) { }
 
-    saveInterface(newInterface: Interface): void {
-        const interfaces: Interface[] = this.getInterfaces();
-        const index = interfaces.findIndex(item => item.id == newInterface.id);
+    saveDashboard(newDashboard: Dashboard): void {
+        const dashboards: Dashboard[] = this.getDashboards();
+        const index = dashboards.findIndex(item => item.id == newDashboard.id);
 
-        if (index == -1) interfaces.push(newInterface);
-        else interfaces[index] = newInterface;
+        if (index == -1) dashboards.push(newDashboard);
+        else dashboards[index] = newDashboard;
 
-        localStorage.setItem('interfaces', serialize(interfaces));
+        localStorage.setItem('dashboards', serialize(dashboards));
     }
 
-    deleteInterface(deletedInterface: Interface): void {
-        const interfaces: Interface[] = this.getInterfaces().filter(item => item.id != deletedInterface.id);
-        localStorage.setItem('interfaces', serialize(interfaces));
+    deleteDashboard(deletedDashboard: Dashboard): void {
+        const dashboards: Dashboard[] = this.getDashboards().filter(item => item.id != deletedDashboard.id);
+        localStorage.setItem('dashboards', serialize(dashboards));
     }
 
-    getInterfaces() : Interface[] {
-        return deserializeArray(Interface, localStorage.getItem('interfaces')) || [];
+    getDashboards() : Dashboard[] {
+        return deserializeArray(Dashboard, localStorage.getItem('dashboards')) || [];
     }
 
-    getInterface(name: string) : Interface {
-        return this.getInterfaces().find(item => item.name == name);
+    getDashboard(name: string) : Dashboard {
+        return this.getDashboards().find(item => item.name == name);
     }
 
-    async getInterfaceWithMetadata(name: string) : Promise<Interface> {
-        const theInterface: Interface = this.getInterface(name);
-        await Promise.all(theInterface.widgets.map(widget => this.getWidgetMetadata(widget)));
-        return theInterface;
+    async getDashboardWithMetadata(name: string) : Promise<Dashboard> {
+        const theDashboard: Dashboard = this.getDashboard(name);
+        await Promise.all(theDashboard.widgets.map(widget => this.getWidgetMetadata(widget)));
+        return theDashboard;
     }
 
-    async getWidgetMetadata(widget: InterfaceWidget) {
+    async getWidgetMetadata(widget: DashboardWidget) {
         const options = widget.options;
         if (options.workflow && options.execution && options.action) {         
             const workflowStatus: WorkflowStatus = (options.execution == "latest") ?

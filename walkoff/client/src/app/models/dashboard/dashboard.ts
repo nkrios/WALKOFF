@@ -1,23 +1,23 @@
 import { Type } from 'class-transformer';
 
-import { InterfaceWidget, 
+import { DashboardWidget, 
          BarChartWidget, 
          PieChartWidget, 
          LineChartWidget,  
          TextWidget,
          TableWidget,
          KibanaWidget
-} from "./interfaceWidget";
+} from "./dashboardWidget";
 
 import { UUID } from 'angular2-uuid';
 
-export class Interface {
+export class Dashboard {
 
     id: string;
 
     name: string;
 
-    @Type(() => InterfaceWidget, {
+    @Type(() => DashboardWidget, {
         discriminator: {
             property: "type",
             subTypes: [
@@ -30,7 +30,7 @@ export class Interface {
             ]
         }
     })
-    widgets: InterfaceWidget[] = []; 
+    widgets: DashboardWidget[] = []; 
 
     constructor() { 
         this.id = UUID.UUID();
