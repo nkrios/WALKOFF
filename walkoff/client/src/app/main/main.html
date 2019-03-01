@@ -20,12 +20,9 @@
               <a *ngFor="let dashboardName of dashboards" class="dropdown-item installedDashboard" routerLink="/dashboard/{{dashboardName}}">
                 <span>{{dashboardName}}</span>
               </a>
-              <span *ngIf="!dashboards || !dashboards.length" class="dropdown-item installedDashboard">
-                No custom WALKOFF dashboards are installed.
-              </span>
-              <div class="dropdown-divider"></div>
+              <div *ngIf="dashboards && dashboards.length > 0" class="dropdown-divider"></div>
               <a class="dropdown-item installedDashboard" routerLink="/dashboard/new">
-                <span><i>Create New...</i></span>
+                <span><i>Create New Dashboard...</i></span>
               </a>
             </div>
           </li>

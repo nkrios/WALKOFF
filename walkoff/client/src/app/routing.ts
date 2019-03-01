@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { PlaybookComponent } from './playbook/playbook.component';
 import { SchedulerComponent } from './scheduler/scheduler.component';
-import { DevicesComponent } from './devices/devices.component';
+import { GlobalsComponent } from './globals/globals.component';
 import { MessagesComponent } from './messages/messages.component';
 import { MetricsComponent } from './metrics/metrics.component';
 import { SettingsComponent } from './settings/settings.component';
@@ -16,7 +16,7 @@ const routes: Routes = [
 	{ path: '', redirectTo: '/workflows', pathMatch: 'full' },
 	{ path: 'workflows', component: PlaybookComponent },
 	{ path: 'scheduler', component: SchedulerComponent },
-	{ path: 'globals', component: DevicesComponent },
+	{ path: 'globals', component: GlobalsComponent },
 	// { path: 'messages', component: MessagesComponent },
 	// { path: 'metrics', component: MetricsComponent },
 	{ path: 'settings', component: SettingsComponent },

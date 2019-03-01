@@ -22,7 +22,7 @@ import { RoutingModule } from './routing';
 import { MainComponent } from './main/main.component';
 import { SchedulerComponent } from './scheduler/scheduler.component';
 import { PlaybookComponent } from './playbook/playbook.component';
-import { DevicesComponent } from './devices/devices.component';
+import { GlobalsComponent } from './globals/globals.component';
 import { MessagesComponent } from './messages/messages.component';
 import { MetricsComponent } from './metrics/metrics.component';
 import { SettingsComponent } from './settings/settings.component';
@@ -30,7 +30,7 @@ import { DashboardsComponent } from './dashboards/dashboards.component';
 import { ExecutionComponent } from './execution/execution.component';
 
 import { SchedulerModalComponent } from './scheduler/scheduler.modal.component';
-import { DevicesModalComponent } from './devices/devices.modal.component';
+import { GlobalsModalComponent } from './globals/globals.modal.component';
 import { SettingsUserModalComponent } from './settings/settings.user.modal.component';
 import { SettingsRoleModalComponent } from './settings/settings.roles.modal.component';
 import { SettingsTimeoutModalComponent } from './settings/settings.timeout.modal.component';
@@ -79,7 +79,7 @@ import { WidgetModalComponent } from './dashboards/widget.modal.component';
 		//Router module components
 		PlaybookComponent,
 		SchedulerComponent,
-		DevicesComponent,
+		GlobalsComponent,
 		MessagesComponent,
 		MetricsComponent,
 		SettingsComponent,
@@ -87,7 +87,7 @@ import { WidgetModalComponent } from './dashboards/widget.modal.component';
 		ExecutionComponent,
 		//Modals
 		SchedulerModalComponent,
-		DevicesModalComponent,
+		GlobalsModalComponent,
 		SettingsUserModalComponent,
 		SettingsRoleModalComponent,
 		SettingsTimeoutModalComponent,
@@ -122,7 +122,7 @@ import { WidgetModalComponent } from './dashboards/widget.modal.component';
 	],
 	entryComponents: [
 		SchedulerModalComponent,
-		DevicesModalComponent,
+		GlobalsModalComponent,
 		SettingsUserModalComponent,
 		SettingsRoleModalComponent,
 		SettingsTimeoutModalComponent,
