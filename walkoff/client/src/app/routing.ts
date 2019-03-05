@@ -15,6 +15,7 @@ import { ManageDashboardsComponent } from './dashboards/manage.dashboards.compon
 const routes: Routes = [
 	{ path: '', redirectTo: '/workflows', pathMatch: 'full' },
 	{ path: 'workflows', component: PlaybookComponent },
+	{ path: 'workflows/:workflowId', component: PlaybookComponent },
 	{ path: 'scheduler', component: SchedulerComponent },
 	{ path: 'globals', component: GlobalsComponent },
 	// { path: 'messages', component: MessagesComponent },

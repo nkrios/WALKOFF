@@ -9,6 +9,7 @@ import { saveAs } from 'file-saver';
 import { plainToClass, classToClass } from 'class-transformer';
 import { NgbModal, NgbTabChangeEvent } from '@ng-bootstrap/ng-bootstrap';
 import { FormControl } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import * as cytoscape from 'cytoscape';
 import * as clipboard from 'cytoscape-clipboard';
@@ -48,6 +49,7 @@ import { EnvironmentVariable } from '../models/playbook/environmentVariable';
 import { PlaybookEnvironmentVariableModalComponent } from './playbook.environment.variable.modal.component';
 import { WorkflowStatus } from '../models/execution/workflowStatus';
 import { CodemirrorComponent } from '@ctrl/ngx-codemirror';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
 	selector: 'playbook-component',
@@ -132,9 +134,9 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	constructor(
 		private playbookService: PlaybookService, private authService: AuthService,
-		private toastrService: ToastrService,
+		private toastrService: ToastrService, private activeRoute: ActivatedRoute,
 		private cdr: ChangeDetectorRef, private utils: UtilitiesService,
-		private modalService: NgbModal
+		private modalService: NgbModal, private router: Router
 	) {}
 
 	/**
@@ -368,6 +370,11 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.loadedWorkflow = workflow;
 			this.setupGraph();
 		}
+	}
+
+	routeToWorkflow(workflow: Workflow): void {
+		this._closeWorkflowsModal();
+		this.router.navigateByUrl(`/workflows/${ workflow.id }`);
 	}
 
 	setupGraph(): void {
@@ -785,7 +792,17 @@ export class PlaybookComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	getPlaybooksWithWorkflows(): void {
 		this.playbookService.getPlaybooks()
-			.then(playbooks => this.playbooks = playbooks);
+			.then(playbooks => {
+				this.playbooks = playbooks;
+				this.activeRoute.params.subscribe(params => {
+					if (params.workflowId) {
+						this.playbookService.loadWorkflow(params.workflowId).then(workflow => {
+							let playbook = this.playbooks.find(p => p.workflows.some(w => w.id == workflow.id));
+							this.loadWorkflow(playbook, workflow);
+						})
+					}
+				})
+			});
 	}
 
 	_sanitizeExpressionAndChildren(expression: ConditionalExpression): void {
