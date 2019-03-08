@@ -48,6 +48,7 @@ import { KeysPipe } from './pipes/keys.pipe';
 import { UtilitiesService } from './utilities.service';
 import { ManageDashboardsComponent } from './dashboards/manage.dashboards.component';
 import { WidgetModalComponent } from './dashboards/widget.modal.component';
+import { SafeEmbedPipe } from './pipes/safeEmbed.pipe';
 
 @NgModule({
 	imports: [
@@ -103,6 +104,7 @@ import { WidgetModalComponent } from './dashboards/widget.modal.component';
 		// Pipes
 		KeysPipe,
 		ManageDashboardsComponent,
+		SafeEmbedPipe,
 		WidgetModalComponent,
 	],
 	providers: [

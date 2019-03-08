@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ViewEncapsulation, OnInit, OnChanges } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 
@@ -12,13 +12,10 @@ import { GridsterConfig, GridType, CompactType } from 'angular-gridster2';
 import { Dashboard } from '../models/dashboard/dashboard';
 import { DashboardWidget } from '../models/dashboard/dashboardWidget';
 
-import { DomSanitizer } from '@angular/platform-browser';
-
 @Component({
 	selector: 'dashboards-component',
 	templateUrl: './dashboards.html',
 	styleUrls: ['./dashboards.scss'],
-	encapsulation: ViewEncapsulation.None,
 	providers: [AuthService],
 })
 export class DashboardsComponent implements OnInit {
@@ -38,8 +35,7 @@ export class DashboardsComponent implements OnInit {
 	
 	constructor(
 		private route: ActivatedRoute, private toastrService: ToastrService,
-		private http: HttpClient, private dashboardService: DashboardService,
-		private sanitizer: DomSanitizer
+		private http: HttpClient, private dashboardService: DashboardService
 	) { }
 
 	/**
@@ -127,10 +123,6 @@ export class DashboardsComponent implements OnInit {
 		//return '980px';
 		return this.gridRows * Math.ceil(this.gridColSize * 3 / 4 + this.gridGutterSize) + this.gridGutterSize  + 'px';
 	}
-
-	getItemHeight(item: DashboardWidget) {
-        return item.rows * Math.ceil(this.gridColSize * 3/4 + this.gridGutterSize) - 80;
-    }
 
 	savePDF() {
 		return window.print();
@@ -232,9 +224,5 @@ export class DashboardsComponent implements OnInit {
 		//     //! after the for loop is finished running, we save the pdf.
 		//     pdf.save('Test.pdf');
 	//});
-	}
-
-	sanitizeEmbedUrl(url) {
-		return this.sanitizer.bypassSecurityTrustResourceUrl(url)
 	}
 }

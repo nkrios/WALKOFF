@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { GridsterConfig, GridsterItem, GridType, CompactType } from 'angular-gridster2';
+import { GridsterConfig, GridType, CompactType } from 'angular-gridster2';
 import { DashboardWidget, BarChartWidget, PieChartWidget, LineChartWidget, TextWidget, KibanaWidget, TableWidget } from '../models/dashboard/dashboardWidget';
 import { Dashboard } from '../models/dashboard/dashboard';
 import { DashboardService } from './dashboard.service';
@@ -7,9 +7,6 @@ import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { WidgetModalComponent } from './widget.modal.component';
-import { DomSanitizer } from '@angular/platform-browser';
-
-
 
 @Component({
     selector: 'manage-dashboards-component',
@@ -34,8 +31,7 @@ export class ManageDashboardsComponent implements OnInit {
         private toastrService: ToastrService,
         private activeRoute: ActivatedRoute,
         private router: Router,
-        private modalService: NgbModal,
-        private sanitizer: DomSanitizer
+        private modalService: NgbModal
     ) {}
 
     ngOnInit() {
@@ -83,10 +79,6 @@ export class ManageDashboardsComponent implements OnInit {
 
     getGridHeight() {
         return this.gridRows * Math.ceil(this.gridColSize * 3/4 + this.gridGutterSize) + this.gridGutterSize + 'px';
-    }
-
-    getItemHeight(item: DashboardWidget) {
-        return item.rows * Math.ceil(this.gridColSize * 3/4 + this.gridGutterSize) - 80;
     }
 
     changedOptions() {
@@ -152,8 +144,4 @@ export class ManageDashboardsComponent implements OnInit {
             this.router.navigate(['/dashboard/new']);
         }
     }
-
-    sanitizeEmbedUrl(url) {
-		return this.sanitizer.bypassSecurityTrustResourceUrl(url)
-	}
 }
